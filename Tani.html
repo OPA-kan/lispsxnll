@@ -1,0 +1,903 @@
+{% extends 'base.html' %}
+
+{% block title %}Dredging - 単位情報共有{% endblock %}
+
+{% block head %}
+<style>
+    /* このページ固有のスタイル */
+    .main-content h1 {
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        font-weight: 300;
+        text-align: center;
+    }
+
+    .controls {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .search-bar {
+        flex-grow: 1;
+        margin-right: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--box-shadow);
+        display: flex;
+    }
+
+    .search-bar input {
+        width: 100%;
+        padding: 12px 20px;
+        border: none;
+        outline: none;
+        font-size: 1.1em;
+    }
+
+    .post-button {
+        background-color: var(--primary-color);
+        color: var(--background-white);
+        padding: 12px 25px;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 1.1em;
+        font-weight: 700;
+        transition: background-color 0.3s ease;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .post-button:hover {
+        background-color: #003366;
+    }
+
+    .post-list {
+        width: 100%;
+        max-width: 900px;
+    }
+
+    .post-card {
+        background-color: var(--background-white);
+        padding: 25px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 20px;
+        transition: transform 0.2s ease;
+        text-align: left;
+    }
+
+    .post-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .post-card h3 {
+        font-size: 1.4em;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+
+    .post-card p {
+        color: var(--text-dark);
+        margin: 5px 0;
+    }
+
+    /* ログインプロンプトのスタイル */
+    .login-prompt-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 20px;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .login-card {
+        background-color: var(--background-white);
+        padding: 40px 50px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        max-width: 450px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .login-logo {
+        width: 150px;
+        margin-bottom: 20px;
+    }
+
+    .login-card h2 {
+        font-size: 1.8em;
+        font-weight: 500;
+        color: var(--text-dark);
+        margin: 0 0 10px 0;
+    }
+
+    .login-card p {
+        font-size: 1.1em;
+        color: var(--text-light);
+        margin-bottom: 30px;
+        line-height: 1.7;
+    }
+
+    .login-button {
+        background-color: var(--primary-color);
+        color: var(--background-white);
+        border: none;
+        padding: 15px 30px;
+        border-radius: var(--border-radius);
+        font-size: 1em;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+
+    .login-button:hover {
+        background-color: #003366;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-bar {
+            margin-right: 0;
+            margin-bottom: 15px;
+        }
+    }
+
+    /* モーダルウィンドウのスタイル */
+    .modal {
+        position: fixed;
+        z-index: 1050;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+     #post-modal {
+        z-index: 1060; /* 詳細モーダル(1050)よりも高い値を設定 */
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 90%;
+        text-align: left;
+    }
+
+    .modal-content h2 {
+        font-size: 1.8em;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .modal-content label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #555;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+    }
+
+    .modal-content textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .modal-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .modal-buttons button {
+        flex-grow: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .modal-buttons .submit-button {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .modal-buttons .submit-button:hover {
+        background-color: #003366;
+    }
+
+    .modal-buttons .cancel-button {
+        background-color: #ddd;
+        color: #333;
+    }
+
+    .modal-buttons .cancel-button:hover {
+        background-color: #ccc;
+    }
+
+    .delete-button {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9em;
+        float: right;
+        margin-left: 10px;
+    }
+
+    .delete-button:hover {
+        background-color: #c82333;
+    }
+
+    .gpa-button {
+        background-color: #17a2b8;
+        /* GPAボタンのカラー */
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9em;
+        float: right;
+        margin-left: 10px;
+    }
+
+    .gpa-button:hover {
+        background-color: #138496;
+    }
+
+    .edit-button {
+        background-color: #ffc107;
+        color: black;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9em;
+        float: right;
+        margin-left: 10px;
+    }
+
+    .edit-button:hover {
+        background-color: #e0a800;
+    }
+
+    #gpa-modal .modal-content {
+        max-width: 700px;
+        /* グラフが見やすいように幅を広く */
+    }
+
+    .review-card {
+        padding-left: 20px;
+        border-left: 2px solid #ccc;
+        margin-top: 15px;
+        position: relative;
+    }
+
+    .review-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+
+    .course-title-card {
+        cursor: pointer;
+    }
+
+    #course-detail-modal .modal-content {
+        max-width: 900px;
+    }
+
+    #course-detail-modal .tab-container {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    #course-detail-modal .tab-button {
+        padding: 10px 15px;
+        cursor: pointer;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-bottom: none;
+        border-radius: 5px 5px 0 0;
+        margin-right: 5px;
+    }
+
+    #course-detail-modal .tab-button.active {
+        background-color: #fff;
+        border-color: #fff;
+        border-bottom: none;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    #ai-content-list .ai-content-item {
+        margin-bottom: 15px;
+        padding: 15px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        background-color: #fafafa;
+    }
+    .add-review-button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        padding: 12px;
+        flex-grow: 1;
+    }
+    .add-review-button:hover {
+        background-color: #003366;
+    }
+    #course-detail-close-button.cancel-button {
+        padding: 12px;
+    }
+    #course-detail-modal .modal-buttons {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <h1><i class="fas fa-users"></i> 単位情報共有</h1>
+
+    <div id="content-container"
+        style="display: none; width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <div class="controls">
+            <form id="search-form" action="{{ url_for('course_share') }}" method="get" class="search-bar">
+                <input type="text" name="query" placeholder="授業名や教授名で検索..." value="{{ request.args.get('query', '') }}">
+            </form>
+            <button id="post-button" class="post-button"><i class="fas fa-plus-circle"></i> 新規投稿</button>
+        </div>
+
+        <div class="post-list">
+            {% if grouped_courses %}
+            {% for (course_name, professor_name), course_list in grouped_courses.items() %}
+            <div class="post-card course-title-card" 
+                 data-course-id="{{ course_list[0].id }}"
+                 data-course-name="{{ course_name }}"
+                 data-professor-name="{{ professor_name }}">
+                <h3>{{ course_name }}</h3>
+                <p>教授名: {{ professor_name if professor_name != "不明" else "情報なし" }}</p>
+                <p>{{ course_list | length }}件のレビュー</p>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="post-card text-center">
+                <p>まだ投稿がありません。</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="post-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">新規投稿</h2>
+            <form id="post-form" action="/add_course" method="post">
+                <input type="hidden" id="edit-course-id" name="course_id">
+                <label for="course-name">授業名:</label>
+                <input type="text" id="course-name" name="course_name" required>
+
+                <label for="credit">単位数:</label>
+                <input type="number" id="credit" name="credit" required>
+
+                <label for="professor-name">教授名 (任意):</label>
+                <input type="text" id="professor-name" name="professor_name">
+
+                <label for="evaluation-method">成績評価の方法:</label>
+                <select id="evaluation-method" name="evaluation_method">
+                    <option value="" selected>選択しない</option>
+                    <option value="試験のみ">試験のみ</option>
+                    <option value="レポートのみ">レポートのみ</option>
+                    <option value="出席点">出席点</option>
+                    <option value="その他">その他</option>
+                </select>
+
+                <label for="user-grade">自分の成績 (任意):</label>
+                <select id="user-grade" name="user_grade">
+                    <option value="" selected>選択しない</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C">C</option>
+                    <option value="D">D</option>
+                    <option value="F">F</option>
+                </select>
+
+                <label for="evaluation">評価 (授業の雰囲気):</label>
+                <select id="evaluation" name="evaluation" required>
+                    <option value="" disabled selected>評価を選択してください</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="F">F</option>
+                </select>
+                
+                <label for="review">レビュー:</label>
+                <textarea id="review" name="review" required></textarea>
+
+                <label for="year">年度:</label>
+                <input type="number" id="year" name="year" required>
+
+                <div class="modal-buttons">
+                    <button type="button" id="cancel-button" class="cancel-button">キャンセル</button>
+                    <button type="submit" id="submit-button" class="submit-button">投稿</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="course-detail-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="course-detail-modal-title"></h2>
+
+            <div class="tab-container">
+                <button class="tab-button active" data-tab="reviews">レビュー</button>
+                <button class="tab-button" data-tab="gpa">GPA分布</button>
+                <button class="tab-button" data-tab="ai-content">AI生成コンテンツ</button>
+            </div>
+
+            <div id="reviews-tab" class="tab-content active">
+                <div id="reviews-list"></div>
+            </div>
+
+            <div id="gpa-tab" class="tab-content">
+                <canvas id="gpa-chart"></canvas>
+            </div>
+
+            <div id="ai-content-tab" class="tab-content">
+                <div id="ai-content-list"></div>
+            </div>
+
+            <div class="modal-buttons">
+                <button type="button" id="add-review-button" class="add-review-button">この授業にレビューを追加</button>
+                <button type="button" id="course-detail-close-button" class="cancel-button">閉じる</button>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const isAuthenticated = "{{ 'true' if current_user.is_authenticated else 'false' }}" === 'true';
+        const currentUserId = "{{ current_user.id }}";
+        const currentUserEmail = "{{ current_user.email }}";
+        const contentContainer = document.getElementById('content-container');
+        const loginPromptContainer = document.getElementById('login-prompt-container');
+        const postButton = document.getElementById('post-button');
+        const postModal = document.getElementById('post-modal');
+        const postForm = document.getElementById('post-form');
+        const postFormTitle = document.getElementById('modal-title');
+        const postFormSubmitButton = document.getElementById('submit-button');
+        const courseDetailModal = document.getElementById('course-detail-modal');
+        const courseDetailCloseButton = document.getElementById('course-detail-close-button');
+        const courseDetailModalTitle = document.getElementById('course-detail-modal-title');
+        const addReviewButton = document.getElementById('add-review-button');
+        const courseNameInput = document.getElementById('course-name');
+        const professorNameInput = document.getElementById('professor-name');
+        const reviewsList = document.getElementById('reviews-list');
+        const aiContentList = document.getElementById('ai-content-list');
+        const gpaChartCanvas = document.getElementById('gpa-chart');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        let gpaChartInstance = null;
+
+        if (isAuthenticated) {
+            contentContainer.style.display = 'flex';
+        } else {
+            // このページはログイン後に表示されるため、このコードブロックは実行されない
+            // ただし、もしログイン前ページでも使用される場合は、nullチェックが必要
+            if(loginPromptContainer) {
+              loginPromptContainer.style.display = 'flex';
+            }
+        }
+        
+        // ページロード時に、コンテンツコンテナを表示
+        contentContainer.style.display = 'flex';
+
+
+        // タブ切り替え機能
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                button.classList.add('active');
+                document.getElementById(button.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // 授業名カードのクリックイベント
+        document.querySelectorAll('.course-title-card').forEach(card => {
+            card.addEventListener('click', async function () {
+                const courseId = this.dataset.courseId;
+                const courseName = this.dataset.courseName;
+                const professorName = this.dataset.professorName; // 教授名を取得
+
+                // モーダルタイトルに教授名を追加
+                let titleText = `${courseName} の詳細`;
+                if (professorName && professorName !== '不明') {
+                    titleText += ` (${professorName} 担当)`;
+                }
+                courseDetailModalTitle.textContent = titleText;
+
+                courseDetailModal.style.display = 'flex';
+
+                // データの取得と表示
+                await fetchAndDisplayDetails(courseId, courseName);
+            });
+        });
+
+        // 「この授業にレビューを追加」ボタンのクリックイベント
+        addReviewButton.addEventListener('click', () => {
+            const currentCourseName = courseDetailModalTitle.textContent.split(' の詳細')[0].trim();
+            let currentProfessorName = '';
+            const professorMatch = courseDetailModalTitle.textContent.match(/\((.*?)\)/);
+            if (professorMatch && professorMatch[1]) {
+                currentProfessorName = professorMatch[1].replace(' 担当', '').trim();
+            }
+
+            postForm.reset();
+            postFormTitle.textContent = "新規投稿";
+            postForm.action = "/add_course";
+            postFormSubmitButton.textContent = "投稿";
+            document.getElementById('edit-course-id').value = '';
+
+            // 授業名と教授名を自動入力
+            courseNameInput.value = currentCourseName;
+            if (currentProfessorName && currentProfessorName !== '情報なし') {
+                professorNameInput.value = currentProfessorName;
+            }
+
+            // 詳細モーダルを非表示にして、投稿モーダルを表示
+            courseDetailModal.style.display = 'none';
+            postModal.style.display = 'flex';
+        });
+
+        async function fetchAndDisplayDetails(courseId, courseName) {
+            // サーバーへのAPI呼び出しを1回にまとめる
+            try {
+                const response = await fetch(`/course_details/${courseId}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    // カスタムモーダルにメッセージを表示
+                    showCustomModal('データの取得中にエラーが発生しました。', 'error');
+                    return;
+                }
+
+                // --- レビューの表示 ---
+                reviewsList.innerHTML = '';
+                if (data.reviews && data.reviews.length > 0) {
+                    data.reviews.forEach(review => {
+                        const reviewCard = document.createElement('div');
+                        reviewCard.className = 'review-card';
+                        reviewCard.id = `course-${review.id}`;
+                        reviewCard.innerHTML = `
+                                <p><strong>投稿者:</strong> ${review.user_name}</p>
+                                <p><strong>単位数:</strong> ${review.credit}</p>
+                                ${review.year ? `<p><strong>年度:</strong> ${review.year}</p>` : ''}
+                                ${review.professor_name ? `<p><strong>教授:</strong> ${review.professor_name}</p>` : ''}
+                                ${review.evaluation_method ? `<p><strong>成績評価の方法:</strong> ${review.evaluation_method}</p>` : ''}
+                                ${review.user_grade ? `<p><strong>自分の成績:</strong> ${review.user_grade}</p>` : ''}
+                                <p><strong>評価 (授業の雰囲気):</strong> ${review.evaluation}</p>
+                                <p><strong>レビュー:</strong> ${review.review}</p>
+                                <div class="review-actions">
+                                    ${(review.user_id == currentUserId || currentUserEmail === 'dredging.contact@gmail.com') ? `
+                                        <button class="edit-button" data-course-id="${review.id}" data-course-name="${review.course_name}" data-credit="${review.credit}" data-professor-name="${review.professor_name}" data-evaluation-method="${review.evaluation_method}" data-user-grade="${review.user_grade}" data-evaluation="${review.evaluation}" data-review="${review.review}" data-year="${review.year}">編集</button>
+                                        <button class="delete-button" data-course-id="${review.id}">削除</button>
+                                    ` : ''}
+                                </div>
+                            `;
+                        reviewsList.appendChild(reviewCard);
+                    });
+                    attachEditDeleteEvents();
+                } else {
+                    reviewsList.innerHTML = '<p>この授業にはまだレビューがありません。</p>';
+                }
+
+                // --- GPAグラフの表示 ---
+                const distribution = data.gpa_distribution;
+                const grades = ['A', 'B', 'C', 'D', 'F'];
+                const chartData = grades.map(grade => distribution[grade]);
+                
+                if (gpaChartInstance) {
+                    gpaChartInstance.destroy();
+                }
+                gpaChartInstance = new Chart(gpaChartCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: grades,
+                        datasets: [{
+                            label: '人数',
+                            data: chartData,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                // --- AIコンテンツの表示 ---
+                aiContentList.innerHTML = '';
+                if (data.ai_submissions && data.ai_submissions.length > 0) {
+                    data.ai_submissions.forEach(sub => {
+                        const submissionCard = document.createElement('div');
+                        submissionCard.className = 'ai-content-item';
+                        try {
+                            // Parse the JSON string from the text field
+                            const reportData = JSON.parse(sub.text);
+                            const title = reportData.title || 'タイトルなし';
+                            const summary = reportData.summary || '要約なし';
+
+                            submissionCard.innerHTML = `
+                                <h4>AIが作成した調査報告書: ${title}</h4>
+                                <p>${summary.substring(0, 150)}...</p>
+                                <p class="text-right"><a href="/view_report/${sub.id}" class="text-blue-500">詳細を見る</a></p>
+                            `;
+                        } catch (e) {
+                            console.error('AIレポートのJSON解析に失敗しました:', e);
+                            submissionCard.innerHTML = `
+                                <h4>AIが作成した調査報告書</h4>
+                                <p>コンテンツの読み込みに失敗しました。</p>
+                                <p class="text-right"><a href="/view_report/${sub.id}" class="text-blue-500">詳細を見る</a></p>
+                            `;
+                        }
+                        aiContentList.appendChild(submissionCard);
+                    });
+                }
+
+                if (data.ai_tests && data.ai_tests.length > 0) {
+                    data.ai_tests.forEach(test => {
+                        const testCard = document.createElement('div');
+                        testCard.className = 'ai-content-item';
+                        testCard.innerHTML = `
+                            <h4>AIが作成したテスト: ${test.topic}</h4>
+                            <p>難易度: ${test.difficulty}</p>
+                            <p class="text-right"><a href="/test_history/${test.id}" class="text-blue-500">詳細を見る</a></p>
+                        `;
+                        aiContentList.appendChild(testCard);
+                    });
+                }
+                
+                if ((data.ai_submissions && data.ai_submissions.length === 0) && (data.ai_tests && data.ai_tests.length === 0)) {
+                    aiContentList.innerHTML = '<p>この授業にはAI生成コンテンツがありません。</p>';
+                }
+
+            } catch (error) {
+                console.error('データの取得エラー:', error);
+                showCustomModal('データの取得中にエラーが発生しました。', 'error');
+            }
+        }
+
+        // 投稿用モーダル関連の処理
+        postButton.addEventListener('click', function () {
+            // 新規投稿時のフォーム初期化
+            postForm.reset();
+            postFormTitle.textContent = "新規投稿";
+            postForm.action = "/add_course";
+            postFormSubmitButton.textContent = "投稿";
+            document.getElementById('edit-course-id').value = '';
+            postModal.style.display = 'flex';
+        });
+
+        // 投稿フォームの送信
+        postForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const url = this.getAttribute('action');
+            const formData = new FormData(this);
+            const response = await fetch(url, {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            });
+            const data = await response.json();
+            if (data.success) {
+                showCustomModal(data.message, 'success');
+                postModal.style.display = 'none';
+                window.location.reload();
+            } else {
+                showCustomModal('エラー: ' + data.error, 'error');
+            }
+        });
+
+        function attachEditDeleteEvents() {
+            // 編集ボタン
+            document.querySelectorAll('.edit-button').forEach(button => {
+                button.addEventListener('click', function () {
+                    const courseId = this.dataset.courseId;
+                    const courseName = this.dataset.courseName;
+                    const credit = this.dataset.credit;
+                    const professorName = this.dataset.professorName;
+                    const evaluationMethod = this.dataset.evaluationMethod;
+                    const userGrade = this.dataset.userGrade;
+                    const evaluation = this.dataset.evaluation;
+                    const review = this.dataset.review;
+                    const year = this.dataset.year;
+
+                    document.getElementById('edit-course-id').value = courseId;
+                    document.getElementById('course-name').value = courseName;
+                    document.getElementById('credit').value = credit;
+                    document.getElementById('professor-name').value = professorName;
+                    document.getElementById('evaluation-method').value = evaluationMethod;
+                    document.getElementById('user-grade').value = userGrade;
+                    document.getElementById('evaluation').value = evaluation;
+                    document.getElementById('review').value = review;
+                    document.getElementById('year').value = year;
+
+                    postFormTitle.textContent = "投稿を編集";
+                    postForm.action = `/edit_course/${courseId}`;
+                    postFormSubmitButton.textContent = "更新";
+                    postModal.style.display = 'flex';
+                });
+            });
+
+            // 削除ボタン
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', async function () {
+                    if (confirm('本当にこの投稿を削除しますか？')) {
+                        const courseId = this.dataset.courseId;
+                        const response = await fetch(`/delete_course/${courseId}`, { method: 'POST' });
+                        const data = await response.json();
+                        if (data.success) {
+                            showCustomModal(data.message, 'success');
+                            window.location.reload();
+                        } else {
+                            showCustomModal('エラー: ' + data.error, 'error');
+                        }
+                    }
+                });
+            });
+        }
+
+        // 授業詳細モーダルを閉じる
+        courseDetailCloseButton.addEventListener('click', () => {
+            courseDetailModal.style.display = 'none';
+        });
+        window.addEventListener('click', (event) => {
+            if (event.target == courseDetailModal) {
+                courseDetailModal.style.display = 'none';
+            }
+        });
+
+        // 新規投稿モーダルを閉じるためのコードを追加
+        const postModalCancelButton = document.getElementById('cancel-button');
+
+        postModalCancelButton.addEventListener('click', () => {
+            postModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == postModal) {
+                postModal.style.display = 'none';
+            }
+        });
+
+
+        // カスタムモーダル表示関数 (alert()の代替)
+        function showCustomModal(message, type) {
+            const modal = document.createElement('div');
+            modal.className = `custom-alert custom-alert-${type}`;
+            modal.textContent = message;
+            document.body.appendChild(modal);
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            setTimeout(() => {
+                modal.classList.remove('show');
+                setTimeout(() => modal.remove(), 500);
+            }, 3000);
+        }
+
+        // カスタムモーダルのスタイル
+        const customModalStyle = document.createElement('style');
+        customModalStyle.textContent = `
+            .custom-alert {
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%) translateY(-100px);
+                padding: 15px 30px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                opacity: 0;
+                transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+                z-index: 2000;
+                min-width: 250px;
+                text-align: center;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+            .custom-alert.show {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+            .custom-alert-success {
+                background-color: #28a745;
+            }
+            .custom-alert-error {
+                background-color: #dc3545;
+            }
+        `;
+        document.head.appendChild(customModalStyle);
+
+        // ページロード時にイベントをアタッチ
+        attachEditDeleteEvents();
+    });
+</script>
+{% endblock %}
