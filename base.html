@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dredging{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* グローバルスタイル */
+        :root {
+            --primary-color: #3347FF;
+            --accent-color: #3347FF;
+            --background-light: #f2f4f8;
+            --background-white: #FFFFFF;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --border-radius: 14px;
+        }
+
+        /* ダークテーマのトークン */
+        body.theme-dark {
+            --primary-color: #7aa2ff;
+            --accent-color: #9bb8ff;
+            --background-light: #0b1220;
+            --background-white: #111827;
+            --text-dark: #e5e7eb;
+            --text-light: #9ca3af;
+            --border-color: #25324a;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        body.bg-hero {
+            background-image: url("{{ url_for('static', filename='DREGING001.png') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: inherit;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            text-align: center;
+            width: 100%;
+            overflow-x: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: saturate(140%) blur(10px);
+            padding: 14px 28px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+
+        .header .logo {
+            font-size: 1.6em;
+            font-weight: 800;
+            letter-spacing: .5px;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .header .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header .user-menu a,
+        .header .user-menu button {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            background: linear-gradient(180deg, #fff, #f8fafc);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 8px 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 120px;
+            box-sizing: border-box;
+        }
+
+        .header .user-menu a:hover,
+        .header .user-menu button:hover {
+            color: #fff;
+            background: linear-gradient(180deg, var(--primary-color), #2436d8);
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(51, 71, 255, 0.25);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .card {
+            background: var(--background-white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 28px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            background: linear-gradient(180deg, #fff, #f8fafc);
+            color: var(--text-dark);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .25s ease;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: linear-gradient(180deg, var(--primary-color), #2436d8);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(51, 71, 255, .25);
+        }
+
+        input[type=text],
+        input[type=time],
+        input[type=email],
+        input[type=number],
+        select,
+        textarea {
+            background: var(--background-white);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 14px;
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(51, 71, 255, 0.12);
+        }
+
+        .login-prompt-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .login-card {
+            background-color: var(--background-white);
+            padding: 40px 50px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 200px;
+            height: 200px;
+            margin-bottom: 25px;
+            border-radius: 50%;
+            object-fit: cover;
+            animation: logoPop 900ms cubic-bezier(.2, .75, .35, 1) both;
+        }
+
+        .login-card h2 {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0 0 10px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInFromBottom 1s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+
+        .login-card p {
+            font-size: 1.2em;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            line-height: 1.7;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInFromBottom 1s ease-out forwards;
+            animation-delay: 1s;
+        }
+
+        .login-button {
+            background-color: var(--background-white);
+            color: #3c4043;
+            border: 1px solid #dadce0;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: box-shadow 0.3s, background-color 0.3s, transform 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            width: 100%;
+            max-width: 300px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInFromBottom 1s ease-out forwards;
+            animation-delay: 1.5s;
+        }
+
+        .login-button:hover {
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .fa-google {
+            color: #4285F4;
+        }
+
+        @keyframes fadeInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes logoPop {
+            0% {
+                transform: scale(.8);
+                opacity: 0;
+                filter: blur(3px);
+            }
+
+            60% {
+                transform: scale(1.05);
+                opacity: 1;
+                filter: blur(0);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        /* サイドバー共通スタイル */
+        .sidebar-container {
+            position: fixed;
+            top: 0;
+            width: 320px;
+            max-width: 100%;
+            height: 100%;
+            background-color: var(--background-white);
+            box-shadow: -4px 0 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* DMサイドバー (右側) */
+        #dm-sidebar-global {
+            right: 0;
+            transform: translateX(100%);
+        }
+        #dm-sidebar-global.is-open {
+            transform: translateX(0);
+        }
+
+        /* TLサイドバー (左側) */
+        #tl-sidebar-global {
+            left: 0;
+            transform: translateX(-100%);
+        }
+        #tl-sidebar-global.is-open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .sidebar-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.2s ease;
+        }
+
+        .sidebar-close-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .sidebar-content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* リストとチャット/TL画面の切り替え */
+        .list-view,
+        .chat-view {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .list-view.active,
+        .chat-view.active {
+            display: flex;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .list-item:hover {
+            background-color: var(--background-light);
+        }
+        
+        .list-item img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .list-item .info h4 {
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-dark);
+        }
+        
+        .list-item .info p {
+            font-size: 0.9em;
+            color: var(--text-light);
+            margin: 4px 0 0 0;
+        }
+        
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 10px;
+        }
+        
+        .chat-header button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-dark);
+        }
+        
+        /* DMとTLのメッセージスタイル */
+        .messages-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            font-size: 0.95rem;
+        }
+
+        .message-bubble.sent {
+            background-color: var(--primary-color);
+            color: white;
+            align-self: flex-end;
+        }
+
+        .message-bubble.received {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            align-self: flex-start;
+        }
+
+        /* TL専用投稿カードスタイル */
+        .tl-post-card {
+            background-color: var(--background-light);
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 10px;
+        }
+        .tl-post-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .tl-post-content {
+            font-size: 0.9em;
+            color: var(--text-dark);
+        }
+        .tl-post-meta {
+            font-size: 0.75em;
+            color: var(--text-light);
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .input-area {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            gap: 10px;
+            position: sticky;
+            bottom: 0;
+            background-color: var(--background-white);
+            padding-top: 10px;
+        }
+
+        .input-area textarea {
+            flex-grow: 1;
+            border-radius: 20px;
+            padding: 10px 15px;
+            resize: none;
+            height: 40px;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-area button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .profile-image-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .header .user-menu a.btn,
+        .header .user-menu button.btn {
+            min-height: 40px;
+            min-width: 120px;
+            justify-content: center;
+        }
+        
+        /* リサイザー共通スタイル */
+        .sidebar-resizer {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            cursor: ew-resize;
+            z-index: 2001;
+        }
+        /* DMサイドバーのリサイザー */
+        #dm-sidebar-global .sidebar-resizer {
+            left: 0;
+        }
+        /* TLサイドバーのリサイザー */
+        #tl-sidebar-global .sidebar-resizer {
+            right: 0;
+        }
+
+
+        #otter-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            display: none;
+        }
+        
+        /* 経済情報パネル */
+        .financial-panel {
+            width: 300px;
+            background-color: var(--background-white);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 999;
+            overflow-y: auto;
+        }
+        
+        .financial-panel.show {
+            transform: translateX(0);
+        }
+        
+        .financial-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .financial-panel h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .financial-panel-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .financial-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+        }
+        
+        .financial-item h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .financial-item .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .value.negative {
+            color: #ef4444;
+        }
+        
+        .value.positive {
+            color: #22c55e;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-dark);
+        }
+        /* TLサイドバー固有のスタイル */
+        .tl-search-area {
+            position: sticky;
+            top: 0;
+            background-color: var(--background-white);
+            padding-bottom: 10px;
+            z-index: 100;
+        }
+        .tl-search-area input,
+        .tl-search-area select {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .tl-post-card .post-link-card {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 10px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: box-shadow 0.2s;
+        }
+        .tl-post-card .post-link-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .tl-post-card .post-link-content {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .tl-post-card .post-link-title {
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tl-post-card .post-link-description {
+            font-size: 0.8em;
+            color: var(--text-light);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+
+<body class="{% if not current_user.is_authenticated %}bg-hero{% endif %}">
+    <canvas id="otter-canvas"></canvas>
+    
+    <div class="financial-panel" id="financial-panel">
+        <div class="financial-panel-header">
+            <h2>経済情報</h2>
+            <button class="close-btn" id="financial-panel-close-btn">×</button>
+        </div>
+        <div id="financial-data" class="financial-panel-list">
+            <div class="text-center text-sm text-gray-500">
+                <i class="fas fa-spinner fa-spin mr-2"></i>データを読み込み中...</div>
+        </div>
+    </div>
+
+    <header class="header">
+        <a href="/" class="logo">Dredging</a>
+        <div class="user-menu">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('profile') }}" class="flex items-center space-x-2 btn">
+                <img src="{{ current_user.profile_picture_url if current_user.profile_picture_url else url_for('static', filename='default_profile.png') }}" alt="{{ current_user.username }}'s profile" class="profile-image-small">
+                <span>{{ current_user.username }}</span>
+            </a>
+            {% if current_user.email == 'dredging.contact@gmail.com' %}
+            <a href="{{ url_for('add_announcement_page') }}" class="btn"><i class="fas fa-plus-circle"></i> お知らせ投稿</a>
+            {% endif %}
+            <button id="dm-toggle-global" class="btn"><i class="fas fa-envelope"></i> DM</button>
+            <button id="tl-toggle-global" class="btn"><i class="fas fa-comments"></i> TL</button> <a href="{{ url_for('logout') }}" class="btn"><i class="fas fa-sign-out-alt"></i> ログアウト</a>
+            <button id="theme-toggle-global" class="btn">Theme</button>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="btn"><i class="fas fa-sign-in-alt"></i> ログイン</a>
+            <button id="theme-toggle-global" class="btn">Theme</button>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if current_user.is_authenticated %}
+    {% block content %}{% endblock %}
+    {% else %}
+    <div class="login-prompt-container">
+        <div class="login-card">
+            <img src="{{ url_for('static', filename='DREGING_BACK.png') }}" alt="Dredging Logo" class="login-logo">
+            <h2>ようこそ Dredging へ</h2>
+            <p>あなたの学習をサポートします。<br>ご利用にはログインが必要です。</p>
+            <a href="{{ url_for('login') }}" class="login-button">
+                <i class="fab fa-google"></i> Googleアカウントでログイン
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <section id="dm-sidebar-global" class="sidebar-container">
+        <div class="sidebar-resizer"></div>
+        <div class="sidebar-header">
+            <span>DM</span>
+            <button id="dm-close-global" class="sidebar-close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="dm-content-global" class="sidebar-content">
+            <div id="dm-list-view" class="list-view active">
+                <div class="dm-search-area">
+                    <input type="text" id="dm-search-input" placeholder="ユーザーを検索...">
+                </div>
+                <div id="dm-list" class="flex flex-col gap-2 mt-4">
+                    <div class="text-center text-gray-400">メッセージを読み込んでいます...</div>
+                </div>
+            </div>
+            <div id="dm-chat-view" class="chat-view">
+                <div class="chat-header">
+                    <button id="back-to-dm-list-btn"><i class="fas fa-arrow-left"></i></button>
+                    <img id="chat-user-img" src="" alt="user profile" class="profile-image-small">
+                    <h4 id="chat-user-name"></h4>
+                </div>
+                <div id="dm-messages" class="messages-area">
+                    </div>
+                <div class="input-area">
+                    <textarea id="dm-message-input" placeholder="メッセージを入力..."></textarea>
+                    <button id="dm-send-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tl-sidebar-global" class="sidebar-container">
+        <div class="sidebar-resizer"></div>
+        <div class="sidebar-header">
+            <span>サークルTL</span>
+            <button id="tl-close-global" class="sidebar-close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="tl-content-global" class="sidebar-content">
+            <div id="tl-list-view" class="list-view active">
+                <div id="tl-list" class="flex flex-col gap-2">
+                    <div class="text-center text-gray-400">TLを読み込んでいます...</div>
+                </div>
+            </div>
+            <div id="tl-chat-view" class="chat-view">
+                <div class="chat-header">
+                    <button id="back-to-tl-list-btn"><i class="fas fa-arrow-left"></i></button>
+                    <h4 id="tl-chat-name"></h4>
+                    <span id="tl-chat-info" class="text-xs text-gray-500 ml-auto"></span>
+                </div>
+                <div id="tl-posts" class="messages-area">
+                    </div>
+                <div class="input-area flex-col">
+                    <textarea id="tl-message-input" placeholder="このTLに投稿する..." rows="3"></textarea>
+                    <div class="tl-search-area w-full">
+                        <input type="text" id="tl-course-search-input" placeholder="関連授業を検索...">
+                        <select id="tl-course-select" class="w-full mt-2 hidden"></select>
+                    </div>
+                    <div class="flex w-full justify-end mt-2">
+                        <button id="tl-send-btn"><i class="fas fa-paper-plane"></i> 投稿</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="global-toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:3000;display:none;background:var(--background-white);color:var(--text-dark);border:1px solid var(--border-color);box-shadow:var(--box-shadow);padding:12px 16px;border-radius:12px;font-weight:700;"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+      (function() {
+        const key = 'dreging.theme';
+        const stored = localStorage.getItem(key);
+        if (stored === 'dark') document.body.classList.add('theme-dark');
+        const btn = document.getElementById('theme-toggle-global');
+        if (btn) {
+          const syncText = () => btn.textContent = document.body.classList.contains('theme-dark') ? 'Light' : 'Theme';
+          syncText();
+          btn.addEventListener('click', () => {
+            document.body.classList.toggle('theme-dark');
+            localStorage.setItem(key, document.body.classList.contains('theme-dark') ? 'dark' : 'light');
+            syncText();
+          });
+        }
+        window.showToast = function(msg, type) {
+          const el = document.getElementById('global-toast');
+          if (!el) return;
+          el.textContent = msg;
+          el.style.display = 'block';
+          el.style.background = type==='error' ? '#dc3545' : (type==='success' ? '#10b981' : 'var(--background-white)');
+          el.style.color = type ? '#fff' : 'var(--text-dark)';
+          setTimeout(()=>{ el.style.display='none'; }, 2500);
+        }
+        
+        // --- DM関連のグローバル変数と初期化 ---
+        const dmSidebar = document.getElementById('dm-sidebar-global');
+        const dmToggleBtn = document.getElementById('dm-toggle-global');
+        const dmCloseBtn = document.getElementById('dm-close-global');
+        const dmListView = document.getElementById('dm-list-view');
+        const dmChatView = document.getElementById('dm-chat-view');
+        const dmMessages = document.getElementById('dm-messages');
+        const dmMessageInput = document.getElementById('dm-message-input');
+        const dmSendBtn = document.getElementById('dm-send-btn');
+        const backToDmListBtn = document.getElementById('back-to-dm-list-btn');
+        const dmResizer = dmSidebar.querySelector('.sidebar-resizer');
+        const dmSearchInput = document.getElementById('dm-search-input');
+        const dmListContainer = document.getElementById('dm-list');
+
+        let currentRecipientId = null;
+        let socket = null;
+        let myUserId = '{{ current_user.id }}';
+        let currentConversationId = null;
+        
+        // --- TL関連のグローバル変数と初期化 ---
+        const tlSidebar = document.getElementById('tl-sidebar-global');
+        const tlToggleBtn = document.getElementById('tl-toggle-global');
+        const tlCloseBtn = document.getElementById('tl-close-global');
+        const tlListView = document.getElementById('tl-list-view');
+        const tlChatView = document.getElementById('tl-chat-view');
+        const tlListContainer = document.getElementById('tl-list');
+        const tlPostsContainer = document.getElementById('tl-posts');
+        const tlMessageInput = document.getElementById('tl-message-input');
+        const tlSendBtn = document.getElementById('tl-send-btn');
+        const backToTlListBtn = document.getElementById('back-to-tl-list-btn');
+        const tlResizer = tlSidebar.querySelector('.sidebar-resizer');
+
+        let currentCircleId = null;
+        let currentTlId = null; // 0 for Default TL, ID for Private TL
+        
+        // --- 関連授業検索/選択関連のDOMと変数 ---
+        const tlCourseSearchInput = document.getElementById('tl-course-search-input');
+        const tlCourseSelect = document.getElementById('tl-course-select');
+        let allCourses = [];
+        
+        // ====================================================================
+        // --- DM機能のロジック (変更なし/リネーム) ---
+        // ====================================================================
+        
+        const addMessageToDOM = (message) => {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble');
+            if (message.sender_id.toString() === myUserId) {
+                messageBubble.classList.add('sent');
+            } else {
+                messageBubble.classList.add('received');
+            }
+            messageBubble.textContent = message.content;
+            dmMessages.appendChild(messageBubble);
+            dmMessages.scrollTop = dmMessages.scrollHeight;
+        };
+        
+        const loadDMs = () => {
+            dmListContainer.innerHTML = '<p class="text-center text-gray-400">メッセージを読み込んでいます...</p>';
+            dmListView.classList.add('active');
+            dmChatView.classList.remove('active');
+            
+            fetch('/dm/api/dms')
+                .then(response => response.json())
+                .then(data => {
+                    dmListContainer.innerHTML = '';
+                    if (data.dms && data.dms.length > 0) {
+                        data.dms.forEach(dm => {
+                            const dmItem = document.createElement('div');
+                            dmItem.className = 'list-item dm-list-item';
+                            dmItem.onclick = () => {
+                                loadChat(dm.user_id, dm.username, dm.profile_picture_url);
+                            };
+                            dmItem.innerHTML = `
+                                <img src="${dm.profile_picture_url}" alt="${dm.username}'s profile">
+                                <div class="info">
+                                    <h4>${dm.username}</h4>
+                                    <p>${dm.last_message}</p>
+                                </div>
+                            `;
+                            dmListContainer.appendChild(dmItem);
+                        });
+                    } else {
+                        dmListContainer.innerHTML = '<p class="text-center text-gray-400">DMはありません。</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load DMs:', error);
+                    dmListContainer.innerHTML = '<p class="text-center text-red-500">DMの読み込みに失敗しました。</p>';
+                });
+        };
+
+        const searchUsers = async (query) => {
+            if (query.length < 2) {
+                loadDMs();
+                return;
+            }
+            dmListContainer.innerHTML = '<p class="text-center text-gray-400">ユーザーを検索中...</p>';
+            
+            try {
+                const response = await fetch(`/community/api/users/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                dmListContainer.innerHTML = '';
+                if (data.users && data.users.length > 0) {
+                    data.users.forEach(user => {
+                        const userItem = document.createElement('div');
+                        userItem.className = 'list-item dm-list-item';
+                        userItem.onclick = () => {
+                            loadChat(user.id, user.username, user.profile_picture_url);
+                        };
+                        userItem.innerHTML = `
+                            <img src="${user.profile_picture_url}" alt="${user.username}'s profile">
+                            <div class="info">
+                                <h4>${user.username}</h4>
+                                <p>新しくDMを始めます</p>
+                            </div>
+                        `;
+                        dmListContainer.appendChild(userItem);
+                    });
+                } else {
+                    dmListContainer.innerHTML = '<p class="text-center text-gray-400">ユーザーが見つかりませんでした。</p>';
+                }
+            } catch (error) {
+                console.error('ユーザー検索に失敗しました:', error);
+                dmListContainer.innerHTML = '<p class="text-center text-red-500">ユーザー検索に失敗しました。</p>';
+            }
+        };
+
+        window.loadChat = async (userId, username, profilePicUrl) => {
+            currentRecipientId = userId;
+            
+            dmListView.classList.remove('active');
+            dmChatView.classList.add('active');
+            
+            document.getElementById('chat-user-img').src = profilePicUrl;
+            document.getElementById('chat-user-name').textContent = username;
+            
+            dmMessages.innerHTML = '<p class="text-center text-gray-400">メッセージを読み込んでいます...</p>';
+
+            try {
+                const response = await fetch(`/dm/api/dms/${userId}/messages`);
+                const data = await response.json();
+                
+                dmMessages.innerHTML = '';
+                if (data.messages) {
+                    data.messages.forEach(addMessageToDOM);
+                }
+                
+                if (socket && data.conversation_id) {
+                    currentConversationId = data.conversation_id;
+                    socket.emit('join_dm_room', { conversation_id: currentConversationId });
+                }
+            } catch (error) {
+                console.error('チャット履歴のロードに失敗しました:', error);
+                dmMessages.innerHTML = '<p class="text-center text-red-500">チャット履歴のロードに失敗しました。</p>';
+            }
+        };
+        
+        const sendMessage = () => {
+            const content = dmMessageInput.value.trim();
+            if (content && currentRecipientId) {
+                socket.emit('send_dm', {
+                    recipient_id: currentRecipientId,
+                    content: content,
+                    conversation_id: currentConversationId
+                });
+                dmMessageInput.value = '';
+                dmMessageInput.style.height = '40px';
+            }
+        };
+        
+        // ====================================================================
+        // --- TL機能のロジック (新規追加) ---
+        // ====================================================================
+        
+        /**
+         * 関連授業情報とURL、画像を含む投稿カードを生成
+         */
+        const createPostCard = (post) => {
+            const postCard = document.createElement('div');
+            postCard.className = 'tl-post-card';
+            
+            let contentHTML = `
+                <div class="tl-post-content">${post.content}</div>
+            `;
+            
+            if (post.link_url) {
+                contentHTML += `
+                    <a href="${post.link_url}" target="_blank" class="post-link-card">
+                        ${post.link_thumbnail_url ? `<img src="${post.link_thumbnail_url}" class="post-link-thumbnail" alt="link thumbnail" onerror="this.onerror=null; this.src='https://placehold.co/80x80/E5E7EB/6B7280?text=Link'">` : ''}
+                        <div class="post-link-content">
+                            <div class="post-link-title">${post.link_title}</div>
+                            <div class="post-link-description">${post.link_description}</div>
+                        </div>
+                    </a>
+                `;
+            }
+            if (post.media_url) {
+                if (post.media_type === 'image') {
+                    contentHTML += `<img src="${post.media_url}" class="w-full mt-2 rounded-lg" alt="投稿画像" onerror="this.onerror=null; this.src='https://placehold.co/300x200/E5E7EB/6B7280?text=Image+Error'">`;
+                } else if (post.media_type === 'video') {
+                    contentHTML += `<video controls class="w-full mt-2 rounded-lg"><source src="${post.media_url}" type="video/mp4"></video>`;
+                }
+            }
+            if (post.course_info) {
+                contentHTML += `
+                    <div class="tl-post-meta mt-2 text-left">
+                        <i class="fas fa-book text-sm mr-1"></i>
+                        <a href="/course_details_page/${post.course_info.id}" class="text-blue-500 hover:underline text-xs">
+                            ${post.course_info.course_name} (${post.course_info.professor_name})
+                        </a>
+                    </div>
+                `;
+            }
+            
+            const header = document.createElement('div');
+            header.className = 'tl-post-header';
+            header.innerHTML = `
+                <img src="${post.user_profile_picture}" alt="${post.username}'s profile" class="profile-image-small">
+                <span class="font-bold text-sm">${post.username}</span>
+            `;
+
+            const meta = document.createElement('div');
+            meta.className = 'tl-post-meta';
+            meta.textContent = `${post.created_at}`;
+
+            postCard.appendChild(header);
+            postCard.innerHTML += contentHTML;
+            postCard.appendChild(meta);
+            
+            return postCard;
+        };
+
+        const loadJoinedTLs = () => {
+            tlListContainer.innerHTML = '<p class="text-center text-gray-400">TLを読み込んでいます...</p>';
+            tlListView.classList.add('active');
+            tlChatView.classList.remove('active');
+            
+            fetch('/community/api/user_tls')
+                .then(response => {
+                    if (!response.ok) throw new Error('TLリストの取得に失敗');
+                    return response.json();
+                })
+                .then(data => {
+                    tlListContainer.innerHTML = '';
+                    if (data.tls && data.tls.length > 0) {
+                        data.tls.forEach(tl => {
+                            const tlItem = document.createElement('div');
+                            tlItem.className = 'list-item tl-list-item';
+                            tlItem.onclick = () => {
+                                loadTLPosts(tl.circle_id, tl.tl_id, tl.circle_name, tl.tl_name, tl.member_count);
+                            };
+                            tlItem.innerHTML = `
+                                <img src="${tl.circle_image_url || 'https://placehold.co/48x48/3347FF/FFFFFF?text=TL'}" alt="${tl.circle_name}'s image">
+                                <div class="info">
+                                    <h4>${tl.tl_name}</h4>
+                                    <p class="text-xs">@${tl.circle_name} (${tl.member_count}人)</p>
+                                </div>
+                            `;
+                            tlListContainer.appendChild(tlItem);
+                        });
+                    } else {
+                        tlListContainer.innerHTML = '<p class="text-center text-gray-400">参加中のTLはありません。</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load TLs:', error);
+                    tlListContainer.innerHTML = '<p class="text-center text-red-500">TLの読み込みに失敗しました。</p>';
+                });
+        };
+
+        const loadTLPosts = async (circleId, tlId, circleName, tlName, memberCount) => {
+            currentCircleId = circleId;
+            currentTlId = tlId;
+            
+            tlListView.classList.remove('active');
+            tlChatView.classList.add('active');
+            
+            document.getElementById('tl-chat-name').textContent = tlName;
+            document.getElementById('tl-chat-info').textContent = `@${circleName} (${memberCount}人)`;
+            
+            tlPostsContainer.innerHTML = '<p class="text-center text-gray-400">投稿を読み込んでいます...</p>';
+            
+            try {
+                const response = await fetch(`/community/api/circles/${circleId}/tls/${tlId}/posts`);
+                const data = await response.json();
+                
+                tlPostsContainer.innerHTML = '';
+                if (data.posts && data.posts.length > 0) {
+                    data.posts.reverse().forEach(post => {
+                        tlPostsContainer.appendChild(createPostCard(post));
+                    });
+                } else {
+                    tlPostsContainer.innerHTML = '<p class="text-center text-gray-400">まだ投稿はありません。</p>';
+                }
+                
+                if (socket) {
+                    const roomName = tlId === 0 ? `channel_${circleId}` : `circle_${circleId}_tl_${tlId}`;
+                    socket.emit('join_tl_room', { room_name: roomName });
+                }
+
+            } catch (error) {
+                console.error('TL投稿のロードに失敗しました:', error);
+                tlPostsContainer.innerHTML = '<p class="text-center text-red-500">TL投稿のロードに失敗しました。</p>';
+            }
+        };
+        
+        const sendTLPost = () => {
+            const content = tlMessageInput.value.trim();
+            const selectedCourseId = tlCourseSelect.value;
+            
+            if (!content) {
+                showToast('投稿内容を入力してください', 'error');
+                return;
+            }
+            if (currentCircleId && currentTlId !== null) {
+                // FormDataを使って送信
+                const formData = new FormData();
+                formData.append('content', content);
+                formData.append('tl_id', currentTlId);
+                if (selectedCourseId) {
+                    formData.append('course_id', selectedCourseId);
+                }
+                
+                fetch(`/community/circles/${currentCircleId}/posts`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        tlMessageInput.value = '';
+                        tlMessageInput.style.height = '40px';
+                        tlCourseSearchInput.value = ''; // 検索フィールドをクリア
+                        tlCourseSelect.innerHTML = ''; // 選択肢をクリア
+                        tlCourseSelect.classList.add('hidden'); // 選択肢を非表示
+                    } else {
+                        showToast(data.error || 'TLへの投稿に失敗しました', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('TL投稿エラー:', error);
+                    showToast('TLへの投稿に失敗しました', 'error');
+                });
+            }
+        };
+
+        // ====================================================================
+        // --- 関連授業検索機能のロジック ---
+        // ====================================================================
+
+        const fetchCourses = async () => {
+            try {
+                const response = await fetch('/api/courses');
+                const data = await response.json();
+                allCourses = data;
+            } catch (error) {
+                console.error('Failed to fetch courses:', error);
+                showToast('授業リストの取得に失敗しました。', 'error');
+            }
+        };
+        
+        const filterCourses = (query) => {
+            const normalizedQuery = query.toLowerCase();
+            const filtered = allCourses.filter(course =>
+                course.course_name.toLowerCase().includes(normalizedQuery) ||
+                (course.professor_name && course.professor_name.toLowerCase().includes(normalizedQuery))
+            );
+            return filtered;
+        };
+
+        const updateCourseSelect = (courses) => {
+            tlCourseSelect.innerHTML = '<option value="">授業を選択しない</option>';
+            if (courses.length > 0) {
+                courses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = `${course.course_name} (${course.professor_name || '不明'})`;
+                    tlCourseSelect.appendChild(option);
+                });
+                tlCourseSelect.classList.remove('hidden');
+            } else {
+                tlCourseSelect.classList.add('hidden');
+            }
+        };
+        
+        // ====================================================================
+        // --- イベントリスナー ---
+        // ====================================================================
+
+        // DM関連イベント
+        if (dmToggleBtn) {
+            dmToggleBtn.addEventListener('click', () => {
+                tlSidebar.classList.remove('is-open'); // TLサイドバーを閉じる
+                dmSidebar.classList.toggle('is-open');
+                if (dmSidebar.classList.contains('is-open')) {
+                    loadDMs();
+                }
+            });
+        }
+        if (dmCloseBtn) {
+            dmCloseBtn.addEventListener('click', () => {
+                 dmSidebar.classList.remove('is-open');
+                 dmListView.classList.add('active');
+                 dmChatView.classList.remove('active');
+            });
+        }
+        backToDmListBtn.addEventListener('click', loadDMs);
+        dmMessageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        dmSendBtn.addEventListener('click', sendMessage);
+        dmSearchInput.addEventListener('input', (e) => {
+            searchUsers(e.target.value);
+        });
+
+        // TL関連イベント
+        if (tlToggleBtn) {
+            tlToggleBtn.addEventListener('click', () => {
+                dmSidebar.classList.remove('is-open'); // DMサイドバーを閉じる
+                tlSidebar.classList.toggle('is-open');
+                if (tlSidebar.classList.contains('is-open')) {
+                    loadJoinedTLs();
+                }
+            });
+        }
+        if (tlCloseBtn) {
+            tlCloseBtn.addEventListener('click', () => {
+                 tlSidebar.classList.remove('is-open');
+                 tlListView.classList.add('active');
+                 tlChatView.classList.remove('active');
+            });
+        }
+        backToTlListBtn.addEventListener('click', loadJoinedTLs);
+        
+        tlMessageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendTLPost();
+            }
+        });
+        tlSendBtn.addEventListener('click', sendTLPost);
+        
+        // 授業検索の入力イベント
+        tlCourseSearchInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            if (query.length > 1) {
+                const filtered = filterCourses(query);
+                updateCourseSelect(filtered);
+            } else {
+                tlCourseSelect.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            // TL表示(Ctrl+q)
+            if (e.altKey && e.ctrlKey && e.key === 'q') { 
+                e.preventDefault();
+                tlToggleBtn.click();
+            }
+            // Ctrl + w (DMトグル)
+            if (e.altKey && e.ctrlKey && e.key === 'w') {
+                e.preventDefault();
+                dmToggleBtn.click();
+            }
+            // Ctrl + l (ログアウト)
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                window.location.href = "{{ url_for('logout') }}";
+            }
+        });
+        
+        // WebSocket接続
+        document.addEventListener('DOMContentLoaded', () => {
+            socket = io();
+            socket.on('receive_dm', (data) => {
+                if (dmChatView.classList.contains('active') && (data.sender_id.toString() === currentRecipientId.toString() || data.sender_id.toString() === myUserId.toString())) {
+                    addMessageToDOM(data);
+                }
+            });
+            
+            // TL投稿のリアルタイム受信
+            socket.on('new_post', (data) => {
+                const tlRoomName = data.tl_id === 0 ? `channel_${data.circle_id}` : `circle_${data.circle_id}_tl_${data.tl_id}`;
+                const currentRoomName = currentTlId === 0 ? `channel_${currentCircleId}` : `circle_${currentCircleId}_tl_${currentTlId}`;
+
+                if (tlChatView.classList.contains('active') && tlRoomName === currentRoomName) {
+                    tlPostsContainer.appendChild(createPostCard(data));
+                    tlPostsContainer.scrollTop = tlPostsContainer.scrollHeight;
+                }
+            });
+
+            // ページロード時に全授業リストを事前取得
+            fetchCourses();
+        });
+
+        // サイドバーのリサイズ機能
+        function setupResizing(sidebarEl, resizerEl) {
+            let isResizing = false;
+            
+            resizerEl.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                document.body.style.userSelect = 'none';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                let newWidth;
+                if (sidebarEl.id === 'dm-sidebar-global') {
+                    // DMサイドバー (右側)
+                    newWidth = window.innerWidth - e.clientX;
+                } else {
+                    // TLサイドバー (左側)
+                    newWidth = e.clientX;
+                }
+
+                if (newWidth > 250 && newWidth < 600) {
+                    sidebarEl.style.width = newWidth + 'px';
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+            document.body.style.userSelect = ''; // テキスト選択を有効化
+        });
+        }
+        setupResizing(dmSidebar, dmResizer);
+        setupResizing(tlSidebar, tlResizer);
+
+        // カワウソのアニメーション関連のロジック
+        const canvas = document.getElementById('otter-canvas');
+        let animationFrameId = null;
+        let isAnimating = false;
+        
+        const otterImage = new Image();
+        otterImage.src = "{{ url_for('static', filename='otter.png') }}";
+        
+        function animateOtters() {
+            if (!canvas) return;
+            
+            isAnimating = true;
+            canvas.style.display = 'block';
+
+            const ctx = canvas.getContext('2d');
+            const otters = [];
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            function initOtters() {
+                for (let i = 0; i < 5; i++) {
+                    otters.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        angle: Math.random() * Math.PI * 2,
+                        speed: Math.random() * 0.5 + 1.5,
+                        size: 350
+                    });
+                }
+                draw();
+            }
+
+            if (otterImage.complete) {
+                initOtters();
+            } else {
+                otterImage.onload = initOtters;
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                otters.forEach(otter => {
+                    // カワウソが境界に到達したら、新しい角度をランダムに設定
+                    const halfSize = otter.size / 2;
+                    if (otter.x < halfSize || otter.x > canvas.width - halfSize ||
+                        otter.y < halfSize || otter.y > canvas.height - halfSize) {
+                        otter.x = Math.random() * (canvas.width - otter.size) + halfSize;
+                        otter.y = Math.random() * (canvas.height - otter.size) + halfSize;
+                        otter.angle = Math.random() * Math.PI * 2;
+                    }
+
+                    // 位置を更新（sinとcosを使って滑らかな動きに）
+                    otter.x += Math.cos(otter.angle) * otter.speed;
+                    otter.y += Math.sin(otter.angle) * otter.speed;
+
+                    ctx.save();
+                    ctx.translate(otter.x, otter.y);
+                    ctx.rotate(otter.angle);
+                    
+                    ctx.drawImage(otterImage, -otter.size / 2, -otter.size / 2, otter.size, otter.size);
+                    ctx.restore();
+                });
+
+                animationFrameId = requestAnimationFrame(draw);
+            }
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.altKey && e.key === 'o') {
+                e.preventDefault();
+                if (!isAnimating) {
+                    animateOtters();
+                } else {
+                    cancelAnimationFrame(animationFrameId);
+                    isAnimating = false;
+                    canvas.style.display = 'none';
+                }
+            }
+        });
+        
+      })();
+      
+      
+        const financialPanel = document.getElementById('financial-panel');
+        const financialDataContainer = document.getElementById('financial-data');
+        const financialPanelCloseBtn = document.getElementById('financial-panel-close-btn');
+
+        let isFinancialPanelOpen = false;
+
+        const updateFinancialData = async () => {
+            financialDataContainer.innerHTML = '<div class="text-center text-sm text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>データを読み込み中...</div>';
+            
+            try {
+                // ダミーデータ
+                const data = {
+                    'ドル/円': { value: 157.85, change: 0.25 },
+                    'S&P 500': { value: 5460.48, change: -12.34 },
+                    '米国10年債券利回り': { value: 4.25, change: -0.05 },
+                    '日経平均': { value: 38580.64, change: 350.12 },
+                    '30年国債利回り': { value: 4.35, change: 0.02 }
+                };
+
+                financialDataContainer.innerHTML = '';
+                for (const [key, value] of Object.entries(data)) {
+                    const isPositive = value.change > 0;
+                    const item = document.createElement('div');
+                    item.className = 'financial-item';
+                    item.innerHTML = `
+                        <div>
+                            <h3 class="text-sm font-bold">${key}</h3>
+                            <p class="text-xs text-gray-500">
+                                前日比: 
+                                <span class="${isPositive ? 'text-green-500' : 'text-red-500'}">
+                                    ${value.change > 0 ? '+' : ''}${value.change}
+                                </span>
+                            </p>
+                        </div>
+                        <span class="value ${isPositive ? 'positive' : 'negative'}">${value.value}</span>
+                    `;
+                    financialDataContainer.appendChild(item);
+                }
+            } catch (error) {
+                financialDataContainer.innerHTML = '<div class="text-center text-red-500 text-sm">データの取得に失敗しました。</div>';
+                console.error('Failed to fetch financial data:', error);
+            }
+        };
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && e.ctrlKey && e.key === 'a') {
+                e.preventDefault();
+                isFinancialPanelOpen = !isFinancialPanelOpen;
+                if (isFinancialPanelOpen) {
+                    financialPanel.classList.add('show');
+                    updateFinancialData();
+                } else {
+                    financialPanel.classList.remove('show');
+                }
+            }
+        });
+
+        financialPanelCloseBtn.addEventListener('click', () => {
+            isFinancialPanelOpen = false;
+            financialPanel.classList.remove('show');
+        });
+        
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

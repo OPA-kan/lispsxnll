@@ -1,0 +1,538 @@
+{% extends 'base.html' %}
+
+{% block title %}サークル一覧{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    /* base.htmlの変数を利用して、ダークモードでも見やすく修正 */
+    .circle-management-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 2.5rem;
+        background-color: var(--background-white);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+    }
+    .circle-management-container h1 {
+        font-size: 2.5em;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .circle-section {
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background-color: var(--background-light);
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    .circle-section h2 {
+        font-size: 1.8em;
+        font-weight: 600;
+        color: var(--primary-color);
+        border-bottom: 3px solid var(--primary-color);
+        padding-bottom: 0.75rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .circle-card {
+        background-color: var(--background-white);
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        overflow: hidden; /* 背景画像のために追加 */
+        position: relative;
+    }
+    .circle-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+    .circle-card-bg { /* 背景画像コンテナ */
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background-size: cover;
+        background-position: center;
+        opacity: 0.3;
+        z-index: 1;
+    }
+    .circle-content { /* コンテンツを前面に */
+        position: relative;
+        z-index: 2;
+    }
+    .circle-info h3 {
+        font-size: 1.5em;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+    }
+    .circle-info p {
+        color: var(--text-light);
+        font-size: 1em;
+        line-height: 1.5;
+    }
+    .circle-meta {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.9em;
+        color: var(--text-light);
+    }
+    .circle-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        gap: 1rem;
+    }
+
+    /* ボタンの視認性を向上させるために色とスタイルを修正 */
+    .btn {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        padding:12px 18px;
+        border-radius:999px;
+        font-weight:700;
+        cursor:pointer;
+        transition: all .25s ease;
+        text-decoration:none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    .btn:hover { 
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(51,71,255,.25);
+    }
+
+    /* プライマリボタン (参加、タイムライン) */
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: #2436d8;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary:hover {
+        background-color: #2436d8;
+        box-shadow: 0 8px 20px rgba(51,71,255,.25);
+    }
+
+    /* セカンダリボタン (編集、メンバー管理) */
+    .btn-secondary {
+        /* 背景色は白/濃色テーマの背景色に設定 */
+        background-color: var(--background-white); 
+        /* 文字色を青（プライマリカラー）に戻すことで、白背景とのコントラストを確保 */
+        color: var(--primary-color); 
+        /* 枠線を太く青くすることで輪郭を強調 */
+        border: none; 
+    }
+    /* ホバー時も青を維持し、濃くする */
+    .btn-secondary:hover {
+        background-color: #2436d8; /* 少し濃い青 */
+        color: #ffffff; /* 文字色は白に反転 */
+        border-color: #2436d8; 
+        box-shadow: 0 8px 20px rgba(51,71,255,.25);
+    }
+
+    .btn-danger {
+        background-color: #fffff;
+        color: #ef4444; /* 修正: 文字色を白に */
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn-danger:hover {
+        background-color: #dc2626;
+        transform: translateY(-2px);
+    }
+
+    /* 二重確認用の危険ボタン */
+    .btn-danger-confirm {
+        background-color: #dc2626;
+        color: white;
+        border: none;
+        animation: pulse-danger 1s infinite alternate;
+    }
+    @keyframes pulse-danger {
+        from { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+        to { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+    }
+
+
+    .executive-label {
+        background-color: #fcd34d;
+        color: #92400e;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.8em;
+        margin-left: 0.5rem;
+    }
+    .executive-card {
+        border: 2px solid #fcd34d;
+        background-color: #fffbeb;
+    }
+    body.theme-dark .executive-card {
+        background-color: #4a3800;
+    }
+    .member-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    .member-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: var(--border-color);
+        color: var(--text-dark);
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.9em;
+    }
+    .member-item img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+    }
+    .member-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* 検索バーのスタイル */
+    .search-container {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        align-items: center;
+    }
+    .search-container input {
+        flex-grow: 1;
+        min-width: 0;
+        background-color: var(--background-white);
+        color: var(--text-dark);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 14px;
+        outline: none;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .search-container input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(51, 71, 255, 0.12);
+    }
+    /* placeolder text color */
+    body.theme-dark .search-container input::placeholder {
+        color: var(--text-light);
+    }
+    
+    /* 役職名のバッジ */
+    .title-badge {
+        background-color: #60a5fa;
+        color: white;
+        padding: 0.1rem 0.5rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        font-size: 0.75em;
+        margin-left: 10px;
+    }
+    /* 参加済みラベルのスタイルを明確化 */
+    .btn-joined {
+        background-color: #4CAF50; /* Green color for joined */
+        color: white;
+        border: none;
+        cursor: default;
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-weight: 700;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="circle-management-container">
+        <h1>サークル管理</h1>
+
+        <div class="circle-section">
+            <h2>所属サークル</h2>
+            <p class="mb-4 text-gray-600">あなたが所属しているサークルです。幹部として設定されているサークルは、幹部カードとして表示されます。</p>
+            {% if my_circles %}
+                {% for circle in my_circles %}
+                <div class="circle-card {% if circle.is_executive %}executive-card{% endif %}" data-circle-id="{{ circle.id }}" data-member-count="{{ circle.members.count() }}">
+                    {% if circle.background_image_url %}
+                    <div class="circle-card-bg" style="background-image: url('{{ circle.background_image_url }}');"></div>
+                    {% endif %}
+                    <div class="circle-content">
+                        <div class="circle-info flex-1">
+                            <h3>
+                                {{ circle.name }} 
+                                {% if circle.is_executive %}
+                                    <span class="executive-label">幹部</span>
+                                    {% set user_id_str = current_user.id|string %}
+                                    {% set title = circle.executives_titles.get(user_id_str, '幹部') %}
+                                    {% if title %}
+                                        <span class="title-badge">{{ title }}</span>
+                                    {% endif %}
+                                {% endif %}
+                            </h3>
+                            <p>{{ circle.description }}</p>
+                            <div class="circle-meta mt-2">
+                                <span><i class="fas fa-users mr-1"></i> メンバー数: {{ circle.members.count() }}</span>
+                                {% if circle.leader_user %}
+                                    <span><i class="fas fa-crown mr-1"></i> リーダー: {{ circle.leader_user.username }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="circle-actions">
+                            <a href="{{ url_for('community.community_feed', feed_type='circle', circle_id=circle.id) }}" class="btn btn-primary"><i class="fas fa-bullhorn"></i> タイムライン</a>
+                            {% if circle.is_executive %}
+                                <a href="{{ url_for('circle_management_bp.create_circle', circle_id=circle.id) }}" class="btn btn-secondary"><i class="fas fa-edit"></i> 編集</a>
+                                <a href="{{ url_for('circle_management_bp.manage_circle_members', circle_id=circle.id) }}" class="btn btn-secondary"><i class="fas fa-users-cog"></i> メンバー管理</a>
+                            {% endif %}
+                            <!-- 脱退ボタンにカスタムデータ属性を追加 -->
+                            <button 
+                                class="btn btn-danger leave-circle-btn" 
+                                data-circle-id="{{ circle.id }}" 
+                                data-member-count="{{ circle.members.count() }}"
+                                data-state="initial"
+                            >
+                                <i class="fas fa-sign-out-alt"></i> 脱退
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-gray-500">所属しているサークルはありません。</p>
+            {% endif %}
+        </div>
+
+        <div class="circle-section">
+            <h2>公開サークル</h2>
+            <a href="{{ url_for('circle_management_bp.create_circle') }}" class="btn btn-primary mb-4">
+                <i class="fas fa-plus-circle mr-2"></i>サークル作成
+            </a>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="サークルを検索..." class="w-full">
+                <button id="search-button" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            <div id="public-circles-container">
+                {% if public_circles %}
+                    {% for circle in public_circles %}
+                    <div class="circle-card" data-circle-id="{{ circle.id }}" data-search-name="{{ circle.name|lower }}" data-search-desc="{{ circle.description|lower }}">
+                        {% if circle.background_image_url %}
+                        <div class="circle-card-bg" style="background-image: url('{{ circle.background_image_url }}');"></div>
+                        {% endif %}
+                        <div class="circle-content">
+                            <div class="circle-info flex-1">
+                                <h3>{{ circle.name }}</h3>
+                                <p>{{ circle.description }}</p>
+                            </div>
+                            <div class="circle-actions">
+                                <!-- 参加済み判定ロジックを修正 -->
+                                {% set is_member = false %}
+                                {% for my_circle in my_circles %}
+                                    {% if my_circle.id == circle.id %}
+                                        {% set is_member = true %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if is_member %}
+                                    <!-- 参加済みの場合、ボタンではなくラベルを表示 -->
+                                    <span class="btn btn-joined">
+                                        <i class="fas fa-check-circle mr-2"></i> 参加済み
+                                    </span>
+                                {% else %}
+                                    <button class="btn btn-primary" onclick="joinCircle({{ circle.id }})"><i class="fas fa-user-plus"></i> 参加</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center text-gray-500" id="no-circles-message">参加可能な公開サークルはありません。</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</main>
+<!-- モーダルを完全に削除 -->
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    // 共通のトースト通知関数 (global)
+    function showToast(message, type = 'info') {
+    // base.htmlにshowToastが定義されていればそちらを呼び出す
+    if (typeof window.showToast === 'function') {
+        window.showToast(message, type);
+    } else {
+        // base.htmlにshowToastが存在しない場合のフォールバックロジック
+        console.log(`Toast: ${message} (${type})`);
+        // ここでカスタムのトースト通知UIを作成することも可能
+    }
+}
+
+    /**
+     * サークル参加処理
+     */
+    async function joinCircle(circleId) {
+        try {
+            const response = await fetch(`/community/circles/${circleId}/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                showToast(data.message, 'success');
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('サークルへの参加に失敗しました。', 'error');
+        } finally {
+            // 参加成功・失敗に関わらず、リストの状態を更新するためにリロード
+            setTimeout(() => location.reload(), 500);
+        }
+    }
+
+    /**
+     * サークル脱退処理
+     * @param {HTMLElement} buttonElement - クリックされた脱退ボタン要素
+     */
+    async function handleLeaveCircleClick(buttonElement) {
+        const circleId = buttonElement.dataset.circleId;
+        const memberCount = parseInt(buttonElement.dataset.memberCount, 10);
+        const currentState = buttonElement.dataset.state;
+        const circleCard = buttonElement.closest('.circle-card');
+        
+        // 1. 初回クリック時の処理（確認状態へ移行）
+        if (currentState === 'initial') {
+            buttonElement.dataset.state = 'confirm';
+            buttonElement.innerHTML = '<i class="fas fa-check"></i> 本当に脱退しますか？';
+            
+            // 最後のメンバーであるかどうかに応じてボタンのスタイルとテキストを更新
+            if (memberCount === 1) {
+                // 最後のメンバーの場合の強めの警告
+                buttonElement.classList.remove('btn-danger');
+                buttonElement.classList.add('btn-danger-confirm');
+                buttonElement.innerHTML = '<i class="fas fa-trash-alt"></i> サークルを削除して脱退';
+                showToast('⚠️ 【最終警告】再クリックでサークルが完全に削除されます！', 'error');
+            } else {
+                // 存続する場合の通常の確認
+                buttonElement.classList.remove('btn-danger');
+                buttonElement.classList.add('btn-danger-confirm');
+                showToast('最終確認：もう一度クリックすると脱退処理が実行されます。', 'warning');
+            }
+            
+            // 5秒後に自動で元に戻るタイマーを設定
+            const timer = setTimeout(() => {
+                if (buttonElement.dataset.state === 'confirm') {
+                    buttonElement.dataset.state = 'initial';
+                    buttonElement.classList.remove('btn-danger-confirm');
+                    buttonElement.classList.add('btn-danger');
+                    buttonElement.innerHTML = '<i class="fas fa-sign-out-alt"></i> 脱退';
+                }
+            }, 5000);
+            buttonElement.dataset.timer = timer; // タイマーIDを保存
+            
+            return;
+        }
+
+        // 2. 2回目のクリック（脱退実行）
+        if (currentState === 'confirm') {
+            // タイマーをクリア
+            clearTimeout(buttonElement.dataset.timer);
+            
+            // UIを一時的にロック
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 処理中...';
+            
+            try {
+                const response = await fetch(`/community/circles/${circleId}/leave`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.status === 'deleted') {
+                        // サークル削除の場合
+                        showToast(data.message + ' (サークル削除)', 'success');
+                    } else {
+                        // 単なる脱退の場合
+                        showToast(data.message, 'success');
+                    }
+                } else {
+                     showToast(data.message || '脱退に失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('サークルからの脱退中にエラーが発生しました。', 'error');
+            } finally {
+                // 成功・失敗に関わらず、リストの状態を更新するためにリロード
+                setTimeout(() => location.reload(), 500);
+            }
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // 脱退ボタンのクリックイベントをまとめて処理
+        document.querySelectorAll('.leave-circle-btn').forEach(button => {
+            button.addEventListener('click', () => handleLeaveCircleClick(button));
+        });
+        
+        // 検索機能 (既存ロジックを保持)
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const publicCirclesContainer = document.getElementById('public-circles-container');
+        const allCircles = publicCirclesContainer ? Array.from(publicCirclesContainer.querySelectorAll('.circle-card')) : [];
+        const noCirclesMessage = document.getElementById('no-circles-message');
+
+        function filterCircles() {
+            const query = searchInput.value.trim().toLowerCase();
+            let hasVisibleCircles = false;
+            
+            allCircles.forEach(circle => {
+                const name = circle.dataset.searchName || '';
+                const desc = circle.dataset.searchDesc || '';
+                
+                if (name.includes(query) || desc.includes(query)) {
+                    circle.style.display = 'flex';
+                    hasVisibleCircles = true;
+                } else {
+                    circle.style.display = 'none';
+                }
+            });
+
+            if (noCirclesMessage) {
+                noCirclesMessage.style.display = hasVisibleCircles ? 'none' : 'block';
+            }
+        }
+        
+        if (searchButton && searchInput) {
+            searchButton.addEventListener('click', filterCircles);
+            searchInput.addEventListener('input', filterCircles);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}最終確認{% endblock %}
+
+{% block content %}
+<main class="container mx-auto mt-10 p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg max-w-lg text-center">
+    <h1 class="text-3xl font-bold text-red-600 mb-4">⚠️ 最終警告：サークルは消滅します ⚠️</h1>
+    <div class="p-4 mb-4 text-red-700 bg-red-100 dark:bg-red-900 dark:text-red-200 rounded-lg">
+        <p class="font-bold">【重要】あなたがこのサークルの最後のメンバーです。</p>
+        <p>脱退すると、このサークルと以下のすべてのデータが<span class="font-bold">完全に削除され、復元できなくなります。</span></p>
+    </div>
+
+    <ul class="list-disc list-inside text-left mx-auto max-w-xs mb-6 text-gray-700 dark:text-gray-300">
+        <li>サークル内の全タイムライン投稿</li>
+        <li>投稿に付随するすべての写真や動画</li>
+        <li>サークルの背景画像や設定</li>
+    </ul>
+
+    <p class="text-lg font-semibold mb-6 text-gray-800 dark:text-gray-200">本当にこのサークルを削除して脱退しますか？</p>
+
+    <div class="flex justify-center gap-4">
+        <form action="{{ url_for('circle_management_bp.leave_circle', circle_id=circle_id, confirm=1) }}" method="post" onsubmit="return confirm('本当に削除しますか？この操作は取り消せません。');">
+            <button type="submit" class="btn-primary-danger bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-full transition-all">
+                <i class="fas fa-trash-alt mr-2"></i> 削除して脱退
+            </button>
+        </form>
+        <a href="{{ url_for('circle_management_bp.circle_list') }}" class="btn-secondary py-2 px-6">
+            キャンセル
+        </a>
+    </div>
+</main>
+{% endblock %}

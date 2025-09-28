@@ -1,0 +1,1234 @@
+{% extends 'base.html' %}
+
+{% block title %}コミュニティフィード{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    /* このページ固有のスタイル */
+    .community-feed-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px;
+        width: 100%;
+    }
+
+    .feed-header {
+        width: 100%;
+        max-width: 700px;
+        margin-bottom: 30px;
+        text-align: center;
+        position: relative;
+    }
+
+    .feed-header h1 {
+        font-size: 2.5em;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+    
+    /* サークルフィード専用のヘッダー */
+    .circle-feed-header {
+        background-color: var(--background-light);
+        padding: 20px 30px;
+        border-radius: 14px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        max-width: 700px; /* フィード幅に合わせる */
+    }
+    .circle-feed-header h1 {
+        color: var(--text-dark);
+        font-size: 2em;
+    }
+    .circle-feed-header p {
+        color: var(--text-light);
+        margin-top: 5px;
+    }
+    
+    /* お知らせセクションのスタイル */
+    .announcement-section {
+        width: 100%;
+        max-width: 700px;
+        margin-bottom: 30px;
+    }
+    .announcement-section h2 {
+        font-size: 1.5em;
+        font-weight: 700;
+        color: #ff9800; /* 警告色 */
+        border-bottom: 2px solid #ff9800;
+        padding-bottom: 5px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    .announcement-card {
+        background-color: #fffbe6; /* 淡い黄色 */
+        border-left: 5px solid #ff9800;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 10px;
+        position: relative; /* 削除ボタンの配置のため */
+    }
+    body.theme-dark .announcement-card {
+        background-color: #3b3000; /* ダークモードでの淡い茶色 */
+        border-left-color: #ff9800;
+    }
+    .announcement-card p {
+        color: var(--text-dark);
+        line-height: 1.5;
+        padding-right: 40px; /* ボタンのスペースを確保 */
+    }
+    .announcement-meta {
+        font-size: 0.85em;
+        color: var(--text-light);
+        margin-top: 5px;
+        text-align: right;
+    }
+    /* 幹部用告知フォームのスタイルは通常のフォームに準拠 */
+    .announcement-form-container {
+        margin-top: 15px;
+    }
+    
+    /* 追加：タイムライン切り替えタブのスタイル */
+    .feed-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+    }
+    .feed-tabs a {
+        padding: 10px 20px;
+        border-radius: 999px;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--text-dark);
+        background-color: var(--background-light);
+        transition: all 0.2s ease-in-out;
+    }
+    .feed-tabs a:hover {
+        background-color: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .feed-tabs a.active {
+        background-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .feed-tabs a.create-circle-btn {
+        background-color: var(--accent-color);
+        color: white;
+        display: flex;
+        align-items: center;
+    }
+    .feed-tabs a.create-circle-btn:hover {
+        background-color: #2436d8;
+    }
+    
+    /* TL切り替えタブ（サークル内）のスタイル */
+    .circle-tl-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        background-color: var(--background-white);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    .circle-tl-tabs a {
+        padding: 8px 15px;
+        border-radius: 999px;
+        font-size: 0.9em;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--text-dark);
+        background-color: var(--background-light);
+        transition: all 0.2s ease-in-out;
+    }
+    .circle-tl-tabs a.active {
+        background-color: #a5b4fc; /* 青紫 */
+        color: #3730a3;
+    }
+
+    /* 投稿セクションのスタイル */
+    .post-form-container {
+        width: 100%;
+        max-width: 700px;
+        background-color: var(--background-white);
+        padding: 20px;
+        border-radius: 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+    }
+    .post-form-container textarea {
+        width: 100%;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        font-size: 1em;
+        resize: vertical;
+        min-height: 100px;
+        margin-bottom: 10px;
+        transition: border-color 0.2s;
+        background-color: var(--background-light);
+        color: var(--text-dark);
+    }
+    .post-form-container textarea:focus {
+        border-color: var(--primary-color);
+        outline: none;
+    }
+    .post-form-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+    }
+    .post-form-footer input[type="file"] {
+        display: none;
+    }
+    .post-form-footer .file-upload-label {
+        background-color: transparent;
+        color: var(--primary-color);
+        font-weight: 600;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+    .post-form-footer .file-upload-label:hover {
+        background-color: rgba(51, 71, 255, 0.1);
+    }
+    .post-form-footer .post-btn {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 999px;
+        font-weight: 700;
+        transition: background-color 0.2s;
+    }
+    .post-form-footer .post-btn:hover {
+        background-color: #2436d8;
+    }
+    .post-list {
+        width: 100%;
+        max-width: 700px;
+    }
+    .post-card {
+        background-color: var(--background-white);
+        padding: 20px;
+        border-radius: 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+    }
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    .post-header .profile-picture {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .post-header .user-info h3 {
+        font-weight: 700;
+        font-size: 1.1em;
+        color: var(--text-dark);
+    }
+    .post-header .user-info span {
+        font-size: 0.9em;
+        color: var(--text-light);
+    }
+    .post-content {
+        line-height: 1.6;
+        color: var(--text-dark);
+        margin-bottom: 15px;
+        word-wrap: break-word;
+    }
+    .post-media {
+        max-width: 100%;
+        max-height: 500px;
+        border-radius: 12px;
+        object-fit: contain;
+        margin-bottom: 15px;
+        background-color: var(--background-light);
+    }
+    .post-link-card {
+        display: flex;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 15px;
+        text-decoration: none;
+        color: var(--text-dark);
+        transition: box-shadow 0.2s;
+    }
+    .post-link-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .post-link-thumbnail {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .post-link-content {
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .post-link-title {
+        font-weight: 600;
+        font-size: 1.1em;
+        margin-bottom: 5px;
+    }
+    .post-link-description {
+        font-size: 0.9em;
+        color: var(--text-light);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .post-actions {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-color);
+    }
+    .action-btn {
+        background: none;
+        border: none;
+        color: var(--text-light);
+        cursor: pointer;
+        font-size: 1em;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .action-btn:hover {
+        color: var(--primary-color);
+    }
+    .action-btn i {
+        font-size: 1.2em;
+    }
+    .action-btn.liked i {
+        color: #dc2626; /* 赤色 */
+    }
+    .comments-section {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+    .comments-section h4 {
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    .comment-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .comment-form textarea {
+        flex-grow: 1;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        padding: 8px;
+        background-color: var(--background-light);
+        max-height: 80px; /* 最大高さを設定 */
+        min-height: 40px; /* 最小高さを設定 */
+    }
+    .comment-form button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    .comment-list .comment-item {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .comment-item .comment-text {
+        background-color: var(--background-light);
+        padding: 10px;
+        border-radius: 12px;
+    }
+    .reaction-buttons {
+        margin-top: 10px;
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap; /* ボタンが複数行に収まるようにする */
+    }
+    .reaction-buttons button {
+        background: var(--background-light);
+        border: none;
+        padding: 5px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.1s ease;
+    }
+    .reaction-buttons button:hover {
+        transform: scale(1.1);
+    }
+    .reaction-display {
+        margin-top: 10px;
+    }
+    .comment-item .profile-picture-small {
+        width: 32px; /* アイコンのサイズを修正 */
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    /* Hidden class to toggle visibility */
+    .hidden {
+        display: none;
+    }
+    /* 削除ボタンのスタイル */
+    .delete-announcement-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        color: #ef4444; /* 赤 */
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    .delete-announcement-btn:hover {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <div class="community-feed-container">
+        {% if feed_type != 'circle' or not circle_id %}
+            <div class="feed-header">
+                <h1>コミュニティフィード</h1>
+                <div class="feed-tabs">
+                    <a href="{{ url_for('community.community_feed', feed_type='recommended') }}" class="{% if feed_type == 'recommended' %}active{% endif %}">おすすめ</a>
+                    <a href="{{ url_for('community.community_feed', feed_type='following') }}" class="{% if feed_type == 'following' %}active{% endif %}">フォロー中</a>
+                    <a href="{{ url_for('circle_management_bp.circle_list') }}" class="{% if feed_type == 'circle' %}active{% endif %}">
+                         <i class="fas fa-users-cog mr-2"></i>サークル一覧
+                    </a>
+                    <a href="{{ url_for('circle_management_bp.create_circle') }}" class="create-circle-btn">
+                        <i class="fas fa-plus-circle mr-2"></i>サークル作成
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if feed_type == 'circle' and circle_id and circle_info %}
+            <div class="feed-header circle-feed-header">
+                <a href="{{ url_for('circle_management_bp.circle_list') }}" class="text-sm text-gray-500 block mb-2 float-left">
+                    <i class="fas fa-arrow-left mr-1"></i> サークル一覧に戻る
+                </a>
+                <div class="clearfix"></div>
+                <h1>{{ circle_info.name }} のタイムライン</h1>
+                <p>{{ circle_info.description }}</p>
+                <p class="text-sm mt-3 text-gray-500">
+                    <i class="fas fa-users"></i> メンバー数: {{ circle_info.member_count }}
+                </p>
+            </div>
+            
+            <div class="circle-tl-tabs">
+                <a href="{{ url_for('community.community_feed', feed_type='circle', circle_id=circle_id, tl_id=0) }}" class="{% if current_tl_id|default(0) == 0 %}active{% endif %}">
+                    <i class="fas fa-users-cog"></i> 全員TL
+                </a>
+                
+                {% for tl in circle_info.private_tls %}
+                <a href="{{ url_for('community.community_feed', feed_type='circle', circle_id=circle_id, tl_id=tl.id) }}" class="{% if tl.id == current_tl_id|default(0) %}active{% endif %}">
+                    <i class="fas fa-comments"></i> {{ tl.name }}
+                </a>
+                {% endfor %}
+            </div>
+
+            {% if current_tl_id|default(0) == 0 %}
+            <div class="announcement-section">
+                <h2><i class="fas fa-bullhorn mr-2"></i> サークルからのお知らせ</h2>
+                
+                {% if circle_info.is_executive %}
+                <div class="post-form-container announcement-form-container">
+                    <form id="announcement-form">
+                        <textarea id="announcement-content" placeholder="【幹部専用】メンバーへのお知らせを入力（重要事項・イベント告知など）" required></textarea>
+                        <div class="post-form-footer">
+                            <div></div>
+                            <button type="submit" class="post-btn btn-primary" id="announcement-post-btn"><i class="fas fa-paper-plane"></i> 告知投稿</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+
+                <div id="announcement-list">
+                    {% if announcements %}
+                        {% for announcement in announcements %}
+                        <div class="announcement-card" data-announcement-id="{{ announcement.id }}">
+                            <p>{{ announcement.content | safe | urlize }}</p>
+                            <div class="announcement-meta">
+                                投稿者: {{ announcement.author_name }} | {{ announcement.created_at }}
+                                {% if circle_info.is_executive %}
+                                <button class="delete-announcement-btn" data-announcement-id="{{ announcement.id }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-gray-500">まだサークルからのお知らせはありません。</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+
+        {% if feed_type != 'circle' or (feed_type == 'circle' and circle_id) %}
+            <div class="post-form-container">
+                {% if feed_type == 'circle' and circle_id %}
+                    {% set tl_name = '議論・雑談タイムライン' %}
+                    {% if current_tl_id and current_tl_id != 0 %}
+                        {% for tl in circle_info.private_tls %}
+                            {% if tl.id == current_tl_id %}
+                                {% set tl_name = tl.name %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    <h2 class="text-xl font-bold text-gray-700 mb-3"><i class="fas fa-comments mr-2"></i> {{ tl_name }}</h2>
+                {% endif %}
+
+                <form id="post-form" enctype="multipart/form-data">
+                    <textarea id="post-content" name="content" placeholder="{% if feed_type == 'circle' and circle_id %}このTLのメンバーと議論したり、自由に雑談しましょう。{% else %}今、何をしていますか？{% endif %}"></textarea>
+                    
+                    <div class="form-group mb-4">
+                        <label for="course-select" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-book mr-1"></i>関連授業 (任意)
+                        </label>
+                        <select id="course-select" name="course_id" class="w-full p-2 border rounded-md">
+                            <option value="">授業を選択しない</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="channel-id-input" name="channel_id" value="{{ channel_id }}">
+                    <input type="hidden" id="circle-id-input" name="circle_id" value="{{ circle_id if feed_type == 'circle' else '' }}">
+                    <input type="hidden" id="tl-id-input" name="tl_id" value="{{ current_tl_id|default(0) }}">
+                    
+                    <div class="post-form-footer">
+                        <label for="attachment" class="file-upload-label">
+                            <i class="fas fa-image"></i>
+                            <span>ファイルを選択</span>
+                        </label>
+                        <input type="file" id="attachment" name="attachment" accept="image/*,video/*">
+                        <button type="submit" class="post-btn">投稿</button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+
+        <div class="post-list" id="post-list">
+            {% for post in posts %}
+                <div class="post-card" data-post-id="{{ post.id }}">
+                    <div class="post-header">
+                        <a href="{{ url_for('community.user_profile', user_id=post.user_id) }}">
+                            <img src="{{ post.user_profile_picture }}" onerror="this.onerror=null; this.src='https://placehold.co/50x50/3347FF/FFFFFF?text=P'" alt="{{ post.username }}" class="profile-picture">
+                        </a>
+                        <div class="user-info">
+                            <h3><a href="{{ url_for('community.user_profile', user_id=post.user_id) }}">{{ post.username }}</a></h3>
+                            <span>
+                                {{ post.created_at }}
+                                {% if post.circle_name %}
+                                    <i class="fas fa-users ml-2 text-sm text-primary"></i> <span class="text-sm text-primary">{{ post.circle_name }}</span>
+                                {% endif %}
+                                {% if post.tl_name and post.tl_name != 'Default' %}
+                                    <i class="fas fa-lock ml-2 text-sm text-gray-500"></i> <span class="text-sm text-gray-500">{{ post.tl_name }} TL</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        {{ post.content | safe | urlize }}
+                        {% if post.link_url %}
+                            <div class="post-link-card">
+                                {% if post.link_thumbnail_url %}
+                                    <img src="{{ post.link_thumbnail_url }}" class="post-link-thumbnail" alt="link thumbnail" onerror="this.onerror=null; this.src='https://placehold.co/120x120/E5E7EB/6B7280?text=Link'">
+                                {% endif %}
+                                <div class="post-link-content">
+                                    <h4 class="post-link-title">{{ post.link_title }}</h4>
+                                    <p class="post-link-description">{{ post.link_description }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if post.course_info %}
+                            <div class="post-course-info text-sm text-gray-500 mt-2">
+                                <i class="fas fa-book"></i>
+                                <a href="{{ url_for('course_details_page', course_id=post.course_info.id) }}" class="text-blue-500 hover:underline">
+                                    {{ post.course_info.course_name }} ({{ post.course_info.professor_name }})
+                                </a>
+                            </div>
+                        {% endif %}
+                        </div>
+                    {% if post.media_url %}
+                        {% if post.media_type == 'image' %}
+                            <img src="{{ post.media_url }}" class="post-media" alt="投稿画像" onerror="this.onerror=null; this.src='https://placehold.co/700x400/E5E7EB/6B7280?text=Image+Error'">
+                        {% elif post.media_type == 'video' %}
+                            <video controls class="post-media">
+                                <source src="{{ post.media_url }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        {% endif %}
+                    {% endif %}
+                    <div class="post-actions">
+                        <button class="action-btn toggle-like" data-post-id="{{ post.id }}">
+                            <i class="fas fa-heart {% if post.is_liked %}liked{% endif %}"></i>
+                            <span class="likes-count">{{ post.likes_count }}</span>
+                        </button>
+                        <button class="action-btn toggle-comments" data-post-id="{{ post.id }}">
+                            <i class="fas fa-comment"></i>
+                            <span class="comments-count">{{ post.comments_count }}</span>
+                        </button>
+                        <button class="action-btn toggle-reactions" data-post-id="{{ post.id }}">
+                            <i class="fas fa-smile"></i>
+                            <span>リアクション</span>
+                        </button>
+                    </div>
+                    <div class="reaction-display mt-2">
+                        {% for emoji, count in post.reaction_counts.items() %}
+                            <span class="reaction-count bg-gray-200 text-sm px-2 py-1 rounded-full mr-1">{{ emoji }} {{ count }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="reaction-buttons mt-2 hidden" id="reactions-{{ post.id }}">
+                        <button data-emoji="👍">👍</button>
+                        <button data-emoji="😂">😂</button>
+                        <button data-emoji="❤️">❤️</button>
+                        <button data-emoji="🎉">🎉</button>
+                        <button data-emoji="😮">😮</button>
+                        <button data-emoji="😢">😢</button>
+                        <button data-emoji="😡">😡</button>
+                        <button data-emoji="💯">💯</button>
+                        <button data-emoji="🤔">🤔</button>
+                    </div>
+                    <div class="comments-section hidden" id="comments-{{ post.id }}">
+                        <h4>コメント</h4>
+                        <div class="comment-list">
+                            {% for comment in post.comments %}
+                                <div class="comment-item" data-comment-id="{{ comment.id }}">
+                                    <a href="{{ url_for('community.user_profile', user_id=comment.user_id) }}">
+                                        <img src="{{ comment.user_profile_picture_url }}" onerror="this.onerror=null; this.src='https://placehold.co/32x32/3347FF/FFFFFF?text=P'" alt="{{ comment.username }}" class="profile-picture-small">
+                                    </a>
+                                    <div class="comment-content-container">
+                                        <div class="comment-meta">
+                                            <a href="{{ url_for('community.user_profile', user_id=comment.user_id) }}">
+                                                <span class="font-bold">{{ comment.username }}</span>
+                                            </a>
+                                            <span class="comment-date text-gray-500 text-xs">{{ comment.created_at }}</span>
+                                            <button class="action-btn toggle-comment-like" data-comment-id="{{ comment.id }}">
+                                                <i class="fas fa-heart {% if comment.is_liked %}liked{% endif %}"></i>
+                                                <span class="likes-count">{{ comment.likes_count }}</span>
+                                            </button>
+                                        </div>
+                                        <p class="comment-text bg-gray-100 p-2 rounded-lg mt-1">{{ comment.content }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <form class="comment-form" data-post-id="{{ post.id }}">
+                            <textarea placeholder="コメントする..." rows="1"></textarea>
+                            <button type="submit">送信</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    // 共通のトースト通知関数
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.classList.add('toast', type);
+        toast.textContent = message;
+        Object.assign(toast.style, {
+            position: 'fixed',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '10px 20px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            borderRadius: '5px',
+            zIndex: '1000',
+            transition: 'opacity 0.3s ease-in-out'
+        });
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const circleIdInput = document.getElementById('circle-id-input');
+        const currentCircleId = circleIdInput ? circleIdInput.value : null;
+        
+        const tlIdInput = document.getElementById('tl-id-input');
+        const currentTlId = tlIdInput ? tlIdInput.value : 0; // デフォルトは '0'
+
+        // Jinja変数の代わりに、Jinja2のデフォルト値フィルタで安全に値を設定
+        const isExecutive = {{ 'true' if circle_info | default({}) and circle_info.is_executive else 'false' }};
+
+        // WebSocket接続
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', () => {
+            console.log('WebSocket connected!');
+            const channelId = document.getElementById('channel-id-input').value;
+            if (channelId) {
+                // チャンネルに参加する際、サークルIDとTL_IDを渡す
+                socket.emit('join_channel', { 
+                    channel_id: channelId,
+                    circle_id: currentCircleId,
+                    tl_id: currentTlId
+                });
+            }
+        });
+
+        // --- 1. 告知投稿フォームの送信処理 (幹部専用) ---
+        const announcementForm = document.getElementById('announcement-form');
+        if (announcementForm) {
+            announcementForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const content = document.getElementById('announcement-content').value.trim();
+                if (!content) {
+                    showToast('告知内容を入力してください', 'warning');
+                    return;
+                }
+                
+                const postButton = document.getElementById('announcement-post-btn');
+                postButton.disabled = true;
+                postButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 投稿中...';
+
+                try {
+                    const response = await fetch(`/community/circles/${currentCircleId}/announcements`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: content })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        showToast(result.message || 'お知らせを投稿しました', 'success');
+                        announcementForm.reset();
+                        location.reload(); 
+                    } else {
+                        const result = await response.json();
+                        showToast(result.error || '告知投稿に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    showToast('告知投稿中にエラーが発生しました', 'error');
+                    console.error('Error:', error);
+                } finally {
+                    postButton.disabled = false;
+                    postButton.innerHTML = '<i class="fas fa-paper-plane"></i> 告知投稿';
+                }
+            });
+        }
+        
+        // --- 1.5. 告知削除処理 (幹部専用) ---
+        document.getElementById('announcement-list')?.addEventListener('click', async (e) => {
+            const deleteButton = e.target.closest('.delete-announcement-btn');
+            if (deleteButton) {
+                const announcementId = deleteButton.dataset.announcementId;
+                
+                // 確認メッセージはトーストではなく、組み込みの確認ダイアログを使用 (簡単な管理操作のため)
+                if (!confirm('本当にこのお知らせを削除しますか？')) {
+                    return;
+                }
+
+                deleteButton.disabled = true;
+                deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                try {
+                    // 告知削除のエンドポイントを想定
+                    const response = await fetch(`/community/circles/${currentCircleId}/announcements/${announcementId}`, {
+                        method: 'DELETE',
+                    });
+                    
+                    if (response.ok) {
+                        showToast('お知らせを削除しました', 'success');
+                        // 削除された要素をDOMから即時削除
+                        deleteButton.closest('.announcement-card').remove();
+                    } else {
+                        const result = await response.json();
+                        showToast(result.error || 'お知らせの削除に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    showToast('削除処理中にエラーが発生しました', 'error');
+                    console.error('Error deleting announcement:', error);
+                } finally {
+                    deleteButton.disabled = false;
+                    deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                }
+            }
+        });
+
+
+        // --- 2. 通常投稿フォームの送信処理 (議論用TLを兼ねる) ---
+        const postForm = document.getElementById('post-form');
+        postForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(postForm);
+            
+            // TL IDをフォームデータに追加
+            if (currentCircleId && currentTlId) {
+                formData.append('tl_id', currentTlId);
+            }
+
+            // 💡ここから追加💡
+            const courseId = document.getElementById('course-select')?.value;
+            if (courseId) {
+                formData.append('course_id', courseId);
+            }
+            // 💡ここまで追加💡
+
+            // circle_id が存在する場合、サークル投稿のエンドポイントを使う
+            if (currentCircleId) {
+                const response = await fetch(`/community/circles/${currentCircleId}/posts`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showToast(result.message || 'サークルに投稿しました', 'success');
+                    postForm.reset();
+                    // サークルフィードはリロードして最新状態を確実に表示
+                    location.reload(); 
+                } else {
+                    const result = await response.json();
+                    showToast(result.error || 'サークルへの投稿に失敗しました', 'error');
+                }
+            } else {
+                // circle_id が存在しない場合、グローバル投稿のエンドポイントを使う
+                const response = await fetch('/community/posts', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showToast(result.message, 'success');
+                    postForm.reset();
+                } else {
+                    const result = await response.json();
+                    showToast(result.error || '投稿に失敗しました', 'error');
+                }
+            }
+        });
+
+        // 💡ここから追加💡
+        // 関連授業リストをAPIから取得して表示
+        const courseSelect = document.getElementById('course-select');
+        if (courseSelect) {
+            fetch('/api/courses')
+                .then(response => response.json())
+                .then(courses => {
+                    courses.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = `${course.course_name} (${course.professor_name || '不明'})`;
+                        courseSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Failed to load courses:', error);
+                    showToast('授業リストの取得に失敗しました', 'error');
+                });
+        }
+        // 💡ここまで追加💡
+
+        // --- 3. リアクション/いいね/コメント処理 (既存ロジック) ---
+        // ... (既存のイベントリスナーは省略しますが、ファイルには残っています)
+        document.getElementById('post-list').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.toggle-like');
+            if (btn) {
+                const postId = btn.dataset.postId;
+                try {
+                    const response = await fetch(`/community/posts/${postId}/like`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        btn.querySelector('.likes-count').textContent = data.likes_count;
+                        const heartIcon = btn.querySelector('i');
+                        if (data.is_liked) {
+                            heartIcon.classList.add('liked');
+                        } else {
+                            heartIcon.classList.remove('liked');
+                        }
+                    } else {
+                        const result = await response.json();
+                        showToast(result.error || 'いいねの更新に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    showToast('いいねの処理中にエラーが発生しました', 'error');
+                    console.error('Error:', error);
+                }
+            }
+
+            const toggleCommentsBtn = e.target.closest('.toggle-comments');
+            if (toggleCommentsBtn) {
+                const postId = toggleCommentsBtn.dataset.postId;
+                const commentsSection = document.getElementById(`comments-${postId}`);
+                commentsSection.classList.toggle('hidden');
+            }
+
+            const toggleReactionsBtn = e.target.closest('.toggle-reactions');
+            if (toggleReactionsBtn) {
+                const postId = toggleReactionsBtn.dataset.postId;
+                const reactionsSection = document.getElementById(`reactions-${postId}`);
+                reactionsSection.classList.toggle('hidden');
+            }
+
+            const reactionBtn = e.target.closest('.reaction-buttons button');
+            if (reactionBtn) {
+                const postId = reactionBtn.closest('.post-card').dataset.postId;
+                const emoji = reactionBtn.dataset.emoji;
+                try {
+                    const response = await fetch(`/community/posts/${postId}/react`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ emoji: emoji })
+                    });
+                    if (!response.ok) {
+                        const result = await response.json();
+                        showToast(result.error || 'リアクションの追加に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    showToast('リアクション処理中にエラーが発生しました', 'error');
+                    console.error('Error:', error);
+                }
+            }
+
+            const commentLikeBtn = e.target.closest('.toggle-comment-like');
+            if (commentLikeBtn) {
+                const commentId = commentLikeBtn.dataset.commentId;
+                try {
+                    const response = await fetch(`/community/comments/${commentId}/like`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        commentLikeBtn.querySelector('.likes-count').textContent = data.likes_count;
+                        const heartIcon = commentLikeBtn.querySelector('i');
+                        if (data.is_liked) {
+                            heartIcon.classList.add('liked');
+                        } else {
+                            heartIcon.classList.remove('liked');
+                        }
+                    } else {
+                        const result = await response.json();
+                        showToast(result.error || 'コメントへのいいねの更新に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    showToast('コメントへのいいねの処理中にエラーが発生しました', 'error');
+                    console.error('Error:', error);
+                }
+            }
+
+        });
+
+        // コメント送信フォーム
+        document.getElementById('post-list').addEventListener('submit', async (e) => {
+            if (e.target.classList.contains('comment-form')) {
+                e.preventDefault();
+                const form = e.target;
+                const postId = form.dataset.postId;
+                const textarea = form.querySelector('textarea');
+                const content = textarea.value.trim();
+
+                if (!content) {
+                    showToast('コメントを入力してください', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/community/posts/${postId}/comments`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: content })
+                    });
+                    
+                    if (response.ok) {
+                        textarea.value = '';
+                    } else {
+                        const result = await response.json();
+                        showToast(result.error || 'コメントの送信に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    showToast('コメント送信中にエラーが発生しました', 'error');
+                    console.error('Error:', error);
+                }
+            }
+        });
+        
+        // --- 4. SocketIOイベントハンドラ (既存ロジック) ---
+        socket.on('new_post', (data) => {
+            const postList = document.getElementById('post-list');
+            
+            // TLフィルタリング: 現在表示しているTLの投稿のみ受け付ける
+            // ただし、サーバー側でフィルタリングされているはずなので、ここでは表示ロジックのみ
+            if (data.tl_id.toString() !== currentTlId.toString()) {
+                // 受信した投稿のTLが現在表示中のTLと異なれば無視（リアルタイム反映は同じTLのみ）
+                return;
+            }
+
+            const newPostCard = document.createElement('div');
+            newPostCard.className = 'post-card';
+            newPostCard.dataset.postId = data.id;
+
+            const contentHTML = data.content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-500 hover:underline">$1</a>');
+
+            let mediaHTML = '';
+            if (data.media_url) {
+                if (data.media_type === 'image') {
+                    mediaHTML = `<img src="${data.media_url}" class="post-media" alt="投稿画像" onerror="this.onerror=null; this.src='https://placehold.co/700x400/E5E7EB/6B7280?text=Image+Error'">`;
+                } else if (data.media_type === 'video') {
+                    mediaHTML = `<video controls class="post-media"><source src="${data.media_url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+                }
+            }
+
+            let linkCardHTML = '';
+            if (data.link_url) {
+                linkCardHTML = `
+                <a href="${data.link_url}" target="_blank" class="post-link-card">
+                    ${data.link_thumbnail_url ? `<img src="${data.link_thumbnail_url}" class="post-link-thumbnail" alt="link thumbnail" onerror="this.onerror=null; this.src='https://placehold.co/120x120/E5E7EB/6B7280?text=Link'">` : ''}
+                    <div class="post-link-content">
+                        <h4 class="post-link-title">${data.link_title}</h4>
+                        <p class="post-link-description">${data.link_description}</p>
+                    </div>
+                </a>
+                `;
+            }
+            
+            let circleInfoHTML = '';
+            if (data.circle_name) {
+                circleInfoHTML = `<i class="fas fa-users ml-2 text-sm text-primary"></i> <span class="text-sm text-primary">${data.circle_name}</span>`;
+            }
+            
+            let tlInfoHTML = '';
+            if (data.tl_name && data.tl_name !== 'Default') {
+                tlInfoHTML = `<i class="fas fa-lock ml-2 text-sm text-gray-500"></i> <span class="text-sm text-gray-500">${data.tl_name} TL</span>`;
+            }
+
+            // 💡ここから追加💡
+            let courseInfoHTML = '';
+            if (data.course_info) {
+                courseInfoHTML = `
+                <div class="post-course-info text-sm text-gray-500 mt-2">
+                    <i class="fas fa-book"></i>
+                    <a href="/course_details_page/${data.course_info.id}" class="text-blue-500 hover:underline">
+                        ${data.course_info.course_name} (${data.course_info.professor_name})
+                    </a>
+                </div>
+                `;
+            }
+            // 💡ここまで追加💡
+
+            newPostCard.innerHTML = `
+                <div class="post-header">
+                    <a href="/community/user/${data.user_id}">
+                        <img src="${data.user_profile_picture}" alt="${data.username}" class="profile-picture" onerror="this.onerror=null; this.src='https://placehold.co/50x50/3347FF/FFFFFF?text=P'">
+                    </a>
+                    <div class="user-info">
+                        <h3><a href="/community/user/${data.user_id}">${data.username}</a></h3>
+                        <span>
+                            ${data.created_at}
+                            ${circleInfoHTML}
+                            ${tlInfoHTML}
+                        </span>
+                    </div>
+                </div>
+                <div class="post-content">
+                    ${contentHTML}
+                    ${linkCardHTML}
+                    ${courseInfoHTML} </div>
+                ${mediaHTML}
+                <div class="post-actions">
+                    <button class="action-btn toggle-like" data-post-id="${data.id}">
+                        <i class="fas fa-heart"></i>
+                        <span class="likes-count">0</span>
+                    </button>
+                    <button class="action-btn toggle-comments" data-post-id="${data.id}">
+                        <i class="fas fa-comment"></i>
+                        <span class="comments-count">0</span>
+                    </button>
+                    <button class="action-btn toggle-reactions" data-post-id="${data.id}">
+                        <i class="fas fa-smile"></i>
+                        <span>リアクション</span>
+                    </button>
+                </div>
+                <div class="reaction-display mt-2"></div>
+                <div class="reaction-buttons mt-2 hidden" id="reactions-${data.id}">
+                    <button data-emoji="👍">👍</button>
+                    <button data-emoji="😂">😂</button>
+                    <button data-emoji="❤️">❤️</button>
+                    <button data-emoji="🎉">🎉</button>
+                    <button data-emoji="😮">😮</button>
+                    <button data-emoji="😢">😢</button>
+                    <button data-emoji="😡">😡</button>
+                    <button data-emoji="💯">💯</button>
+                    <button data-emoji="🤔">🤔</button>
+                </div>
+                <div class="comments-section hidden" id="comments-${data.id}">
+                    <h4>コメント</h4>
+                    <div class="comment-list"></div>
+                    <form class="comment-form" data-post-id="${data.id}">
+                        <textarea placeholder="コメントする..." rows="1"></textarea>
+                        <button type="submit">送信</button>
+                    </form>
+                </div>
+            `;
+            postList.prepend(newPostCard);
+        });
+        
+        // --- 5. SocketIOイベントハンドラ: 新しい告知のリアルタイム更新 ---
+        socket.on('new_announcement', (data) => {
+            if (data.circle_id.toString() === currentCircleId) {
+                const announcementList = document.getElementById('announcement-list');
+                const newCard = document.createElement('div');
+                newCard.className = 'announcement-card';
+                newCard.dataset.announcementId = data.id;
+                
+                // 幹部であるかどうかは、このタイミングで判定できないため、修正された isExecutive を使用
+                let deleteButtonHTML = '';
+                if (isExecutive === 'true') {
+                    deleteButtonHTML = `<button class="delete-announcement-btn" data-announcement-id="${data.id}"><i class="fas fa-trash-alt"></i></button>`;
+                }
+
+                newCard.innerHTML = `
+                    <p>${data.content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-600 hover:underline">$1</a>')}</p>
+                    <div class="announcement-meta">
+                        投稿者: ${data.author_name} | ${data.created_at}
+                        ${deleteButtonHTML}
+                    </div>
+                `;
+                // リストの先頭に追加
+                announcementList.prepend(newCard);
+                // 「お知らせなし」メッセージがあれば削除
+                const noAnnouncementMsg = announcementList.querySelector('.text-center.text-gray-500');
+                if (noAnnouncementMsg && noAnnouncementMsg.textContent.includes('お知らせはありません')) {
+                    noAnnouncementMsg.remove();
+                }
+            }
+        });
+        
+        // ... (その他のSocketIOイベントハンドラは省略しますが、ファイルには残っています)
+        socket.on('likes_updated', (data) => {
+            const postCard = document.querySelector(`.post-card[data-post-id="${data.post_id}"]`);
+            if (postCard) {
+                const likesCount = postCard.querySelector('.likes-count');
+                likesCount.textContent = data.likes_count;
+                const heartIcon = postCard.querySelector('.toggle-like i');
+                if (data.is_liked) {
+                    heartIcon.classList.add('liked');
+                } else {
+                    heartIcon.classList.remove('liked');
+                }
+            }
+        });
+        
+        socket.on('new_comment', (data) => {
+            const commentList = document.querySelector(`#comments-${data.post_id} .comment-list`);
+            if (commentList) {
+                const newComment = document.createElement('div');
+                newComment.classList.add('comment-item');
+                newComment.innerHTML = `
+                    <a href="/community/user/${data.comment.user_id}">
+                        <img src="${data.comment.user_profile_picture_url}" onerror="this.onerror=null; this.src='https://placehold.co/32x32/3347FF/FFFFFF?text=P'" alt="${data.comment.username}" class="profile-picture-small">
+                    </a>
+                    <div class="comment-content-container">
+                        <div class="comment-meta">
+                            <a href="/community/user/${data.comment.user_id}">
+                                <span class="font-bold">${data.comment.username}</span>
+                            </a>
+                            <span class="comment-date text-gray-500 text-xs">${data.comment.created_at}</span>
+                            <button class="action-btn toggle-comment-like" data-comment-id="${data.comment.id}">
+                                <i class="fas fa-heart"></i>
+                                <span class="likes-count">0</span>
+                            </button>
+                        </div>
+                        <p class="comment-text bg-gray-100 p-2 rounded-lg mt-1">${data.comment.content}</p>
+                    </div>
+                `;
+                commentList.appendChild(newComment);
+                
+                const commentsCountEl = document.querySelector(`.post-card[data-post-id="${data.post_id}"] .comments-count`);
+                if (commentsCountEl) {
+                    commentsCountEl.textContent = data.comments_count;
+                }
+            }
+        });
+        
+        socket.on('reaction_updated', (data) => {
+            const postCard = document.querySelector(`.post-card[data-post-id="${data.post_id}"]`);
+            if (postCard) {
+                const reactionDisplay = postCard.querySelector('.reaction-display');
+                if (reactionDisplay) {
+                    // リアクション表示を更新
+                    let reactionCounts = data.reaction_counts;
+                    reactionDisplay.innerHTML = Object.entries(reactionCounts)
+                        .map(([emoji, count]) => `<span class="reaction-count bg-gray-200 text-sm px-2 py-1 rounded-full mr-1">${emoji} ${count}</span>`)
+                        .join('');
+                }
+            }
+        });
+        
+        socket.on('post_deleted', (data) => {
+            const postElement = document.querySelector(`.post-card[data-post-id="${data.post_id}"]`);
+            if (postElement) {
+                postElement.remove();
+                showToast('投稿が削除されました。', 'info');
+            }
+        });
+
+        socket.on('comment_likes_updated', (data) => {
+            const commentElement = document.querySelector(`.comment-item[data-comment-id="${data.comment_id}"]`);
+            if (commentElement) {
+                const likesCount = commentElement.querySelector('.likes-count');
+                likesCount.textContent = data.likes_count;
+                const heartIcon = commentElement.querySelector('.toggle-comment-like i');
+                if (data.is_liked) {
+                    heartIcon.classList.add('liked');
+                } else {
+                    heartIcon.classList.remove('liked');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
